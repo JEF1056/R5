@@ -25,4 +25,4 @@ def stream(num_devices, split):
             targets = np.stack(targets)
             in_mask = np.stack(in_mask)
             tar_mask = np.stack(tar_mask)
-            yield inputs, targets, in_mask, tar_mask
+            yield inputs, targets, (in_mask, tar_mask)
