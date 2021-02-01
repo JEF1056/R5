@@ -59,8 +59,8 @@ sp = spm.SentencePieceProcessor(model_file=f"{os.path.join(args.dir,'bpe')}.mode
 
 while True:
     inp=input("> ")
-    inp=np.asarray(sp.encode(inp), dtype=np.int32)[0]
-    print(sp.decode(inp))
+    inp=np.asarray(sp.encode(inp)+[1], dtype=np.int32)[0]
+    print(sp.decode(inp.toarray()))
     print(inp)
     if args.backend != "tensorflow": model.state=model_init
     current_symbols=[]
@@ -76,6 +76,6 @@ while True:
         current_symbols.append(int(next_token))
         p.append(time.time()-t1)
     e=time.time()
-    print(trax.data.detokenize(current_symbols[1:],vocab_dir="data", vocab_file="vocab.32768.subwords.txt"))
+    print(sp.decode(current_symbols[1:]))
     print(current_symbols[1:])
     print(f"Took {e-s} seconds {p}, avg: {sum(p)//len(p)}")
