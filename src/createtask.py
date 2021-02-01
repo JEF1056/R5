@@ -12,7 +12,7 @@ def stream(num_devices, split):
     with io.open(nq_tsv_path[split], mode="r", encoding="utf-8") as f:
         while True:
             inputs, in_mask, targets, tar_mask=[],[],[],[]
-            while inputs < num_devices:
+            while len(inputs) < num_devices:
                 d=f.readline()
                 if d == "": f.seek(0); d=f.readline()
                 inp, tar= d.split("\t")
