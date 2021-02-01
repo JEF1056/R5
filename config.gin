@@ -35,7 +35,7 @@ multifactor.factors = 'constant * linear_warmup * rsqrt_decay'
 # ==============================================================================
 Adafactor.beta1 = 0.0
 Adafactor.clipping_threshold = 1.0
-Adafactor.decay_rate = None
+Adafactor.decay_rate = 0
 Adafactor.epsilon1 = 1e-30
 Adafactor.epsilon2 = 0.001
 
