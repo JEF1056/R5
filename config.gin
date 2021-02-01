@@ -79,5 +79,5 @@ Reformer2.mode = 'train'
 Reformer2.n_heads = %n_heads
 Reformer2.n_decoder_layers = %n_layers
 Reformer2.n_encoder_layers = %n_layers
-Reformer2.axial_pos_shape = (64, 64)
+Reformer2.axial_pos_shape = (32, 64)
 Reformer2.d_axial_pos_embs= (256, 256)
