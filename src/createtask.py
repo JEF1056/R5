@@ -21,7 +21,7 @@ def stream(num_devices, split, debug=False):
                 if len(inp) < max_len or len(tar) < max_len:
                     combined=inp+[1]+tar+[2]
                     inputs.append(np.asarray(np.pad(combined, (0, max_len-len(combined))), dtype=np.int32))
-                    mask.append(np.asarray(np.pad(np.ones_like(tar), (len(inp)+1, max_len-len(combined))), dtype=np.int32))
+                    mask.append(np.asarray(np.pad(np.ones(len(tar)+1), (len(inp)+1, max_len-len(combined))), dtype=np.int32))
             if debug:
                 print(f"{len(inputs[0])}\n{len(mask[0])}")
                 print(f"{inputs[0].tolist()}\n{mask[0].tolist()}")
