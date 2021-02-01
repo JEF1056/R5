@@ -46,7 +46,7 @@ del test
 # Training task.
 train_task = training.TrainTask(
     labeled_data=stream(trax.fastmath.device_count(), "train"),
-    loss_layer=tl.CrossEntropyLoss(),
+    loss_layer=tl.WeightedCategoryCrossEntropy(),
     lr_schedule=trax.lr.multifactor(),
     optimizer=trax.optimizers.Adafactor(),
     n_steps_per_checkpoint=500,
@@ -55,7 +55,7 @@ train_task = training.TrainTask(
 # Evaluaton task.
 eval_task = training.EvalTask(
     labeled_data=stream(trax.fastmath.device_count(), "validation"),
-    metrics=[tl.CrossEntropyLoss(), tl.Accuracy()],
+    metrics=[tl.WeightedCategoryCrossEntropy(), tl.WeightedCategoryAccuracy()],
     n_eval_batches=40  # For less variance in eval numbers.
 )
 
