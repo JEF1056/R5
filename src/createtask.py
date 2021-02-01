@@ -21,4 +21,4 @@ def stream(num_devices, split):
                 targets.append(np.asarray(np.pad(tar, (0, max_len-len(tar))), dtype=np.int32))
             inputs = np.stack(inputs)
             targets = np.stack(targets)
-            yield inputs, targets
+            yield (inputs, targets)
