@@ -59,7 +59,7 @@ LSHSelfAttention.n_hashes = 2
 LSHSelfAttention.n_parallel_heads = 1
 LSHSelfAttention.predict_drop_len = 128
 LSHSelfAttention.predict_mem_len = 1024
-LSHSelfAttention.n_parallel_heads = %n_heads / 4
+LSHSelfAttention.n_parallel_heads = 4
 LSHSelfAttention.n_heads = %n_heads
 
 # Parameters for Reformer2:
