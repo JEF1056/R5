@@ -47,7 +47,7 @@ del test
 train_task = training.TrainTask(
     labeled_data=stream(trax.fastmath.device_count(), "train"),
     loss_layer=tl.CrossEntropyLoss(),
-    optimizer=trax.optimizers.Adam(),
+    optimizer=trax.optimizers.Adafactor(),
     n_steps_per_checkpoint=250,
 )
 

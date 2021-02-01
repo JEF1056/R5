@@ -39,6 +39,7 @@ Adafactor.decay_rate = None
 Adafactor.epsilon1 = 1e-30
 Adafactor.epsilon2 = 0.001
 Adafactor.factored = True
+AdafactorOptimizer.multiply_by_parameter_scale = True
 
 # Parameters for SelfAttention:
 # ==============================================================================
