@@ -16,8 +16,8 @@ def stream(num_devices, split):
                 d=f.readline()
                 if d == "": f.seek(0); d=f.readline()
                 inp, tar= d.split("\t")
-                inputs.append(np.asarray(np.pad(sp.encode(inp), (0, max_len))), dtype=np.int32)
-                targets.append(np.asarray(np.pad(sp.encode(tar), (0, max_len))), dtype=np.int32)
+                inputs.append(np.asarray(np.pad(sp.encode(inp), (0, max_len)), dtype=np.int32))
+                targets.append(np.asarray(np.pad(sp.encode(tar), (0, max_len)), dtype=np.int32))
             inputs = np.stack(inputs)
             targets = np.stack(targets)
             yield inputs, targets
