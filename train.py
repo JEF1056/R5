@@ -34,12 +34,12 @@ if args.tpu != None:
 gin.parse_config_file("config.gin")
 if not os.path.exists(f"{os.path.join(args.dir,'bpe')}.model"):
     import sentencepiece as spm
-    spm.SentencePieceTrainer.train(input=args.train, model_prefix=os.path.join(args.dir,'bpe'), train_extremely_large_corpus=True, input_sentence_size=100000, shuffle_input_sentence=True, vocab_size=args.vocab_size, model_type="bpe", character_coverage = 1, user_defined_symbols=['\\n', "\\b"], bos_id=-1,eos_id=-1, pad_id=-1)
+    spm.SentencePieceTrainer.train(input=args.train, model_prefix=os.path.join(args.dir,'bpe'), train_extremely_large_corpus=True, input_sentence_size=100000, shuffle_input_sentence=True, vocab_size=args.vocab_size, model_type="bpe", character_coverage = 1, user_defined_symbols=['\\n', "\\b", "\t","\\e"], bos_piece="\t", eos_piece="\\e", bos_id=1,eos_id=2, pad_id=-1)
 
 with open("config.json", "w") as f:
     json.dump([{"train":args.train, "validation": args.val}, args.max_length, args.dir], f)
 from src.createtask import stream
-test=next(stream(trax.fastmath.device_count(), "train"))[0]
+test=next(stream(trax.fastmath.device_count(), "train",debug=True))[0]
 print("(device count, tokens per device) = ", test.shape)
 del test
 
