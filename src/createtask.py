@@ -10,6 +10,7 @@ sp = spm.SentencePieceProcessor(model_file=f"{os.path.join(out_dir,'bpe')}.model
 
 def stream(num_devices, split):
     with io.open(nq_tsv_path[split], mode="r", encoding="utf-8") as f:
+        print(f"~~Initialized {split} stream~~")
         while True:
             inputs, in_mask, targets, tar_mask=[],[],[],[]
             while len(inputs) < num_devices:
@@ -19,11 +20,11 @@ def stream(num_devices, split):
                 inp, tar= sp.encode(inp), sp.encode(tar)
                 if len(inp) < max_len or len(tar) < max_len:
                     inputs.append(np.asarray(np.pad(inp, (0, max_len-len(inp))), dtype=np.int32))
-                    #in_mask.append(np.asarray(np.pad(np.ones_like(inp), (0, max_len-len(inp))), dtype=np.int32))
+                    in_mask.append(np.asarray(np.pad(np.ones_like(inp), (0, max_len-len(inp))), dtype=np.int32))
                     targets.append(np.asarray(np.pad(tar, (0, max_len-len(tar))), dtype=np.int32))
                     #tar_mask.append(np.asarray(np.pad(np.ones_like(tar), (0, max_len-len(tar))), dtype=np.int32))
             inputs = np.stack(inputs)
             targets = np.stack(targets)
-            #in_mask = np.stack(in_mask)
+            in_mask = np.stack(in_mask)
             #tar_mask = np.stack(tar_mask)
-            yield inputs, targets, np.ones_like(inputs)
+            yield inputs, targets, in_mask
