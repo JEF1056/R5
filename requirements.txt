@@ -1,0 +1,7 @@
+trax==1.3.6
+gin
+jax
+jaxlib
+sentencepiece
+tqdm
+matplotlib
