@@ -25,8 +25,7 @@ def stream(num_devices, split, debug=False):
             if debug:
                 print(f"{inputs[0]}\n{mask[0]}")
                 print()
-                print(sp.decode(inputs[0]))
-                print(f"{sp.decode(inputs[0])}\n{sp.decode(mask[0])}")
+                print(f"{sp.decode(inputs[0])}")
                 overlay=[i for i in inputs if i == 1]
                 print(f"Overlay: {overlay}\nDecoded: {sp.decode()}")
                 exit()
