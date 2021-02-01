@@ -23,7 +23,7 @@ share_qk = False  # LSH attention ignores this flag and always shares q & k
 vocab_size = 32768
 attn_kv = 64
 dropout = 0.1
-n_tokens = 4096
+n_tokens = 2048
 
 # Parameters for multifactor:
 # ==============================================================================
