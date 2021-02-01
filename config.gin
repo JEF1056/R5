@@ -31,15 +31,6 @@ multifactor.constant = 0.001
 multifactor.warmup_steps = 2000
 multifactor.factors = 'constant * linear_warmup * rsqrt_decay'
 
-# Parameters for Adafactor:
-# ==============================================================================
-Adafactor.beta1 = 0.0
-Adafactor.clipping_threshold = 1.0
-Adafactor.decay_rate = None
-Adafactor.epsilon1 = 1e-30
-Adafactor.epsilon2 = 0.001
-Adafactor.factored = True
-
 # Parameters for SelfAttention:
 # ==============================================================================
 trax.layers.SelfAttention.attention_dropout = %dropout

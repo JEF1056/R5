@@ -44,7 +44,7 @@ if args.tpu != None:
 train_task = training.TrainTask(
     labeled_data=stream(trax.fastmath.device_count(), "train"),
     loss_layer=tl.CrossEntropyLoss(),
-    optimizer=trax.optimizers.Adafactor(),
+    optimizer=trax.optimizers.Adam(),
     n_steps_per_checkpoint=2500,
 )
 
