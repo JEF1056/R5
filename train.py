@@ -21,6 +21,16 @@ parser.add_argument('-tpu', type=str, default=None,
                     help='TPU ip address')
 args = parser.parse_args()
 
+if args.tpu != None:
+    print("~~Setting Up Devices~~")
+    import jax
+    from jax.config import config
+    config.FLAGS.jax_xla_backend = "tpu_driver"
+    config.FLAGS.jax_backend_target = f"grpc://{args.tpu}:8470"
+    print(config.FLAGS.jax_backend_target)
+    print(f'{jax.host_count()} available devices')
+    print(f'{jax.devices()} available cores')
+
 gin.parse_config_file("config.gin")
 if not os.path.exists(f"{os.path.join(args.dir,'bpe')}.model"):
     import sentencepiece as spm
@@ -32,16 +42,6 @@ from src.createtask import stream
 test=next(stream(trax.fastmath.device_count(), "train"))[0]
 print("(device count, tokens per device) = ", test.shape)
 del test
-
-if args.tpu != None:
-    print("~~Setting Up Devices~~")
-    import jax
-    from jax.config import config
-    config.FLAGS.jax_xla_backend = "tpu_driver"
-    config.FLAGS.jax_backend_target = f"grpc://{args.tpu}:8470"
-    print(config.FLAGS.jax_backend_target)
-    print(f'{jax.host_count()} available devices')
-    print(f'{jax.devices()} available cores')
 
 # Training task.
 train_task = training.TrainTask(
