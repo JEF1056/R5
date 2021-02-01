@@ -48,14 +48,14 @@ train_task = training.TrainTask(
     labeled_data=stream(trax.fastmath.device_count(), "train"),
     loss_layer=tl.CrossEntropyLoss(),
     optimizer=trax.optimizers.Adam(),
-    n_steps_per_checkpoint=2500,
+    n_steps_per_checkpoint=250,
 )
 
 # Evaluaton task.
 eval_task = training.EvalTask(
     labeled_data=stream(trax.fastmath.device_count(), "validation"),
     metrics=[tl.CrossEntropyLoss(), tl.Accuracy()],
-    n_eval_batches=20  # For less variance in eval numbers.
+    n_eval_batches=600  # For less variance in eval numbers.
 )
 
 output_dir = os.path.expanduser(args.dir)
@@ -69,4 +69,4 @@ training_loop = training.Loop(
     output_dir=output_dir)
 
 # run 1000 steps (batches)
-training_loop.run(50000)
+training_loop.run(100000)
