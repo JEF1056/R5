@@ -15,6 +15,8 @@ parser.add_argument('-train', type=str, default="data/context-train.txt",
                     help='location of train text')
 parser.add_argument('-max_length', type=int, default=4096,
                     help='maximum length for the model (ensure it matches gin)')
+parser.add_argument('-vocab_size', type=int, default=32768,
+                    help='bocab size for the model (ensure it matches gin)')
 parser.add_argument('-tpu', type=str, default=None,
                     help='TPU ip address')
 args = parser.parse_args()
