@@ -1,6 +1,6 @@
 import trax.layers
 import trax.models
-import trax.s
+import trax.optimizers
 import trax.data.inputs
 import trax.supervised.trainer_lib
 
