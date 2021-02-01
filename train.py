@@ -55,7 +55,7 @@ train_task = training.TrainTask(
 eval_task = training.EvalTask(
     labeled_data=stream(trax.fastmath.device_count(), "validation"),
     metrics=[tl.CrossEntropyLoss(), tl.Accuracy()],
-    n_eval_batches=600  # For less variance in eval numbers.
+    n_eval_batches=40  # For less variance in eval numbers.
 )
 
 output_dir = os.path.expanduser(args.dir)
