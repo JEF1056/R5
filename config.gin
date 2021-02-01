@@ -52,8 +52,7 @@ trax.layers.SelfAttention.n_heads = %n_heads
 # ==============================================================================
 LSHSelfAttention.attention_dropout = 0.0
 LSHSelfAttention.chunk_len = 64
-LSHSelfAttention.n_bins = 256
-LSHSelfAttention.n_buckets = 512
+LSHSelfAttention.n_buckets = [256, 512]
 LSHSelfAttention.n_chunks_after = 0
 LSHSelfAttention.n_chunks_before = 1
 LSHSelfAttention.n_hashes = 2
