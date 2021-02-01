@@ -40,7 +40,6 @@ if args.tpu != None:
     print(f'{jax.host_count()} available devices')
     print(f'{jax.devices()} available cores')
 
-print("~~Begin Training~~")
 # Training task.
 train_task = training.TrainTask(
     labeled_data=stream(trax.fastmath.device_count(), "train"),
@@ -58,6 +57,7 @@ eval_task = training.EvalTask(
 
 output_dir = os.path.expanduser(args.dir)
 
+print("~~Begin Training~~")
 # Train tiny model with Loop.
 training_loop = training.Loop(
     trax.models.Reformer2(mode="train"),
