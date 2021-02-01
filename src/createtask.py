@@ -19,11 +19,11 @@ def stream(num_devices, split):
                 inp, tar= sp.encode(inp), sp.encode(tar)
                 if len(inp) < max_len or len(tar) < max_len:
                     inputs.append(np.asarray(np.pad(inp, (0, max_len-len(inp))), dtype=np.int32))
-                    in_mask.append(np.asarray(np.pad(np.ones_like(inp), (0, max_len-len(inp))), dtype=np.int32))
+                    #in_mask.append(np.asarray(np.pad(np.ones_like(inp), (0, max_len-len(inp))), dtype=np.int32))
                     targets.append(np.asarray(np.pad(tar, (0, max_len-len(tar))), dtype=np.int32))
-                    tar_mask.append(np.asarray(np.pad(np.ones_like(tar), (0, max_len-len(tar))), dtype=np.int32))
+                    #tar_mask.append(np.asarray(np.pad(np.ones_like(tar), (0, max_len-len(tar))), dtype=np.int32))
             inputs = np.stack(inputs)
-            targets = np.stack(targets)
+            #targets = np.stack(targets)
             in_mask = np.stack(in_mask)
-            tar_mask = np.stack(tar_mask)
-            yield inputs, targets, in_mask
+            #tar_mask = np.stack(tar_mask)
+            yield inputs, targets, np.ones_like(inputs)
