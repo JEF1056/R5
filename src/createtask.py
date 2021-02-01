@@ -23,9 +23,9 @@ def stream(num_devices, split, debug=False):
                     inputs.append(np.asarray(np.pad(combined, (0, max_len-len(combined))), dtype=np.int32))
                     mask.append(np.asarray(np.pad(np.ones_like(tar), (len(inp)+1, max_len-len(combined))), dtype=np.int32))
             if debug:
-                print(f"{inputs[0]}\n{mask[0]}")
+                print(f"{inputs[0].tolist()}\n{mask[0].tolist()}")
                 print()
-                print(f"{sp.decode(inputs[0])}")
+                print(sp.decode(inputs[0].tolist()))
                 overlay=[i for i in inputs if i == 1]
                 print(f"Overlay: {overlay}\nDecoded: {sp.decode()}")
                 exit()
