@@ -4,7 +4,8 @@ import json
 import numpy as np
 import sentencepiece as spm
 
-nq_tsv_path, max_len, out_dir=json.load(open("config.json", "r"))
+with open("config.json", "r") as f:
+    nq_tsv_path, max_len, out_dir=json.load(f)
 sp = spm.SentencePieceProcessor(model_file=f"{os.path.join(out_dir,'bpe')}.model")
 
 def stream(num_devices, split):
