@@ -29,6 +29,9 @@ if not os.path.exists(f"{os.path.join(args.dir,'bpe')}.model"):
 with open("config.json", "w") as f:
     json.dump([{"train":args.train, "validation": args.val}, args.max_length, args.dir], f)
 from src.createtask import stream
+test=next(stream(trax.fastmath.device_count(), "train"))[0]
+print("(device count, tokens per device) = ", test.shape)
+del test
 
 if args.tpu != None:
     print("~~Setting Up Devices~~")
