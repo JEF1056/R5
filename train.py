@@ -39,7 +39,7 @@ if not os.path.exists(f"{os.path.join(args.dir,'bpe')}.model"):
 with open("config.json", "w") as f:
     json.dump([{"train":args.train, "validation": args.val}, args.max_length, args.dir], f)
 from src.createtask import stream
-test=next(stream(trax.fastmath.device_count(), "train",debug=True))[0]
+test=next(stream(trax.fastmath.device_count(), "train"))[0]
 print("(device count, tokens per device) = ", test.shape)
 del test
 
@@ -49,7 +49,7 @@ train_task = training.TrainTask(
     loss_layer=tl.CrossEntropyLoss(),
     lr_schedule=trax.lr.multifactor(),
     optimizer=trax.optimizers.Adafactor(),
-    n_steps_per_checkpoint=250,
+    n_steps_per_checkpoint=500,
 )
 
 # Evaluaton task.
@@ -64,10 +64,10 @@ output_dir = os.path.expanduser(args.dir)
 print("~~Begin Training~~")
 # Train tiny model with Loop.
 training_loop = training.Loop(
-    trax.models.Reformer2(mode="train"),
+    trax.models.ReformerLM(mode="train"),
     train_task,
     eval_tasks=[eval_task],
     output_dir=output_dir)
 
 # run 1000 steps (batches)
-training_loop.run(100000)
+training_loop.run(1000000)
