@@ -26,7 +26,7 @@ def stream(num_devices, split, debug=False):
                 print(f"{inputs[0].tolist()}\n{mask[0].tolist()}")
                 print()
                 print(sp.decode(inputs[0].tolist()))
-                overlay=[i for i in inputs[0] if i == 1]
+                overlay=[v for i, v in inputs[0] if mask[0][i] == 1]
                 print(f"Overlay: {overlay}\nDecoded: {sp.decode(overlay)}")
                 exit()
             inputs = np.stack(inputs)
