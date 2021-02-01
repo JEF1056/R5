@@ -6,7 +6,7 @@ import trax.supervised.trainer_lib
 
 # Parameters that will vary between experiments:
 # ==============================================================================
-train.model = @trax.models.Reformer2
+train.model = @trax.models.ReformerLM
 # Our model will have 6 layers, alternating between the LSH attention proposed
 # in the Reformer paper and local attention within a certain context window.
 n_layers = 6
@@ -61,22 +61,19 @@ LSHSelfAttention.predict_mem_len = 1024
 LSHSelfAttention.n_parallel_heads = 4
 LSHSelfAttention.n_heads = %n_heads
 
-# Parameters for Reformer2:
+# Parameters for ReformerLM:
 # ==============================================================================
-Reformer2.input_vocab_size = %vocab_size
-Reformer2.output_vocab_size = %vocab_size
-Reformer2.encoder_attention_type = @trax.layers.SelfAttention
-Reformer2.encoder_decoder_attention_type  = @LSHSelfAttention
-Reformer2.d_attention_key = %attn_kv
-Reformer2.d_attention_value = %attn_kv
-Reformer2.d_model = 512
-Reformer2.d_ff = 2048
-Reformer2.dropout = %dropout
-Reformer2.ff_activation = @trax.layers.Relu
-Reformer2.max_len = %n_tokens
-Reformer2.mode = 'train'
-Reformer2.n_heads = %n_heads
-Reformer2.n_decoder_layers = %n_layers
-Reformer2.n_encoder_layers = %n_layers
-Reformer2.axial_pos_shape = (32, 64)
-Reformer2.d_axial_pos_embs= (256, 256)
+ReformerLM.vocab_size = %vocab_size
+ReformerLM.attention_type = %attn_type
+ReformerLM.d_attention_key = %attn_kv
+ReformerLM.d_attention_value = %attn_kv
+ReformerLM.d_model = 512
+ReformerLM.d_ff = 2048
+ReformerLM.dropout = %dropout
+ReformerLM.ff_activation = @trax.layers.Relu
+ReformerLM.max_len = %n_tokens
+ReformerLM.mode = 'train'
+ReformerLM.n_heads = %n_heads
+ReformerLM.n_layers = %n_layers
+ReformerLM.axial_pos_shape = (32, 64)
+ReformerLM.d_axial_pos_embs= (256, 256)
