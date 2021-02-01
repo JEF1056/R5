@@ -45,7 +45,7 @@ Adafactor.factored = True
 trax.layers.SelfAttention.attention_dropout = %dropout
 trax.layers.SelfAttention.chunk_len = 64
 trax.layers.SelfAttention.n_chunks_before = 1
-trax.layers.SelfAttention.n_parallel_heads = %n_heads / 4
+trax.layers.SelfAttention.n_parallel_heads = 4
 trax.layers.SelfAttention.n_heads = %n_heads
 
 # Parameters for LSHSelfAttention:
