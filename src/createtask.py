@@ -17,7 +17,7 @@ def stream(num_devices, split):
                 if d == "": f.seek(0); d=f.readline()
                 inp, tar= d.split("\t")
                 inp, tar= sp.encode(inp), sp.encode(tar)
-                if len(inp) > max_len or len(tar) > max_len:
+                if len(inp) < max_len or len(tar) < max_len:
                     inputs.append(np.asarray(np.pad(inp, (0, max_len-len(inp))), dtype=np.int32))
                     in_mask.append(np.asarray(np.pad(np.ones_like(inp), (0, max_len-len(inp))), dtype=np.int32))
                     targets.append(np.asarray(np.pad(tar, (0, max_len-len(tar))), dtype=np.int32))
