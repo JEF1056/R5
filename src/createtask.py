@@ -12,8 +12,8 @@ def stream(num_devices, split):
         while True:
             inputs, targets=[],[]
             for _ in range(num_devices):
-                d=train_data_stream.readline()
-                if d == "": train_data_stream.seek(0); d=train_data_stream.readline()
+                d=f.readline()
+                if d == "": f.seek(0); d=f.readline()
                 inp, tar= d.split("\t")
                 inputs.append(np.asarray(np.pad(sp.encode(inp), (0, max_len))), dtype=np.int32)
                 targets.append(np.asarray(np.pad(sp.encode(tar), (0, max_len))), dtype=np.int32)
