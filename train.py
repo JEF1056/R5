@@ -44,7 +44,7 @@ print("~~Parsing arguments~~")
 with open("config.json", "w") as f:
     json.dump({"train":os.path.join(args.dir,"data", args.train), "validation": os.path.join(args.dir,"data", args.val)},f)
 from src.createtask import nq_dataset_fn
-if ars.tpu_adress != None: args.tpu_address = f"grpc://{args.tpu_address}:8470"
+if args.tpu_adress != None: args.tpu_address = f"grpc://{args.tpu_address}:8470"
 
 print("~~Setting up devices~~")
 if args.tpu_address != None:
