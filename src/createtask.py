@@ -1,34 +1,40 @@
-import io
-import os
 import json
-import numpy as np
-import sentencepiece as spm
+import functools
+import tensorflow.compat.v1 as tf
+import tensorflow_datasets as tfds
 
 with open("config.json", "r") as f:
-    nq_tsv_path, max_len, out_dir=json.load(f)
-sp = spm.SentencePieceProcessor(model_file=f"{os.path.join(out_dir,'bpe')}.model")
+    nq_tsv_path=json.load(f)
+    
+def preprocess(ds):
+    def normalize_text(text):
+        #print(f"trying {text}")
+        #text=tf.strings.unicode_encode(text, "UTF-8")
+        return text
 
-def stream(num_devices, split, debug=False):
-    with io.open(nq_tsv_path[split], mode="r", encoding="utf-8") as f:
-        print(f"~~Initialized {split} stream~~")
-        while True:
-            inputs, mask=[],[]
-            while len(inputs) < num_devices:
-                d=f.readline()
-                if d == "": f.seek(0); d=f.readline()
-                inp, tar= d.split("\t")
-                inp, tar= sp.encode(inp), sp.encode(tar)
-                if len(inp) < max_len or len(tar) < max_len:
-                    combined=inp+[1]+tar+[2]
-                    inputs.append(np.asarray(np.pad(combined, (0, max_len-len(combined))), dtype=np.int32))
-                    mask.append(np.asarray(np.pad(np.ones(len(tar)+1), (len(inp)+1, max_len-len(combined))), dtype=np.int32))
-            if debug:
-                print(f"{len(inputs[0])}\n{len(mask[0])}")
-                print(f"{inputs[0]}\n{mask[0]}")
-                print()
-                print(sp.decode(inputs[0].tolist())[:50])
-                overlay=[int(v) for i, v in enumerate(inputs[0]) if mask[0][i] == 1]
-                print(f"Overlay: {overlay}\nDecoded: {sp.decode(overlay)}")
-            inputs = np.stack(inputs)
-            mask = np.stack(mask)
-            yield inputs, inputs, mask
+    def to_inputs_and_targets(ex):
+        """Map {"question": ..., "answer": ...}->{"inputs": ..., "targets": ...}."""
+        return {
+            "inputs":
+                tf.strings.join(
+                    ["Input: ", normalize_text(ex["question"])]),
+            "targets": normalize_text(ex["answer"])
+        }
+    return ds.map(to_inputs_and_targets, num_parallel_calls=tf.data.experimental.AUTOTUNE)
+
+def nq_dataset_fn(split, shuffle_files=False):
+    # We only have one file for each split.
+    del shuffle_files
+    # Load lines from the text file as examples.
+    ds = tf.data.TextLineDataset(nq_tsv_path[split])
+    # Split each "<question>\t<answer>" example into (question, answer) tuple.
+    ds = ds.map(
+    functools.partial(tf.io.decode_csv, record_defaults=["", ""],
+                      field_delim="\t", use_quote_delim=False),
+    num_parallel_calls=tf.data.experimental.AUTOTUNE)
+    ds = ds.map(lambda *ex: dict(zip(["question", "answer"], ex)))
+    return preprocess(ds)
+
+print("A few raw validation examples...")
+for ex in tfds.as_numpy(nq_dataset_fn("validation").take(5)):
+    print(ex)

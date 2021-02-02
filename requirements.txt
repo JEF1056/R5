@@ -1,7 +1,3 @@
-trax==1.3.7
-gin
-jax
-jaxlib
+tensorflow
 sentencepiece
-tqdm
-matplotlib
+tensorflow-datasets

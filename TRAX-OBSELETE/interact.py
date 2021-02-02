@@ -1,11 +1,10 @@
+import os
 import gin
 import trax
-import os
 import time
 import argparse
 import numpy as np
 import sentencepiece as spm
-import jax.numpy as jnp
 
 parser = argparse.ArgumentParser(description='Evaluate a model')
 parser.add_argument('-dir', type=str, default="train",
@@ -17,7 +16,7 @@ parser.add_argument('-temp', type=float, default=1.0,
 
 print("~~Parsing Arguments~~")
 args = parser.parse_args()
-trax.fastmath.set_backend(args.backend)
+#trax.fastmath.set_backend(args.backend)
 gin.parse_config_file(os.path.join(args.dir, "config.gin"))
 
 print("~~Loading Model~~")
@@ -64,7 +63,7 @@ while True:
     while len(current_symbols) < 30 and 2 not in current_symbols:
         print("started")
         t1=time.time()
-        cont=jnp.asarray([current_symbols+inp], dtype=np.int32)
+        cont=[current_symbols+inp]
         print(cont)
         #next_token=next(sampler)
         output = model(cont)[:, -1, :][0] / args.temp
