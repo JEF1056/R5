@@ -3,8 +3,9 @@ import trax
 import os
 import time
 import argparse
-import numpy as np
+#import numpy as np
 import sentencepiece as spm
+import jax.numpy as np
 
 parser = argparse.ArgumentParser(description='Evaluate a model')
 parser.add_argument('-dir', type=str, default="train",
@@ -20,7 +21,7 @@ trax.fastmath.set_backend(args.backend)
 gin.parse_config_file(os.path.join(args.dir, "config.gin"))
 
 print("~~Loading Model~~")
-model = trax.models.ReformerLM()
+model = trax.models.ReformerLM(mode="predict")
 model.init_from_file(os.path.join(args.dir, "model.pkl.gz"),  weights_only=True)
 model_init=model.state
 
@@ -56,20 +57,24 @@ while True:
     inp=np.asarray(sp.encode(inp)+[1], dtype=np.int32)
     print(sp.decode(inp.tolist()))
     print(inp)
-    model.state=model_init
+    #model.state=model_init
+    #sampler = trax.supervised.decoding.autoregressive_sample_stream(model, inputs=inp, batch_size=1, temperature=args.temp, accelerate=True)
     current_symbols=[]
     s, p=time.time(),[]
-    while len(current_symbols) < 30 and 1 not in current_symbols[1:]:
+    while len(current_symbols) < 30 and 2 not in current_symbols:
+        print("started")
         t1=time.time()
-        print(np.asarray([np.concatenate([inp,np.asarray(current_symbols)])], dtype=np.int32))
-        output = model(np.asarray([np.concatenate([inp,np.asarray(current_symbols)])], dtype=np.int32))[:, -1, :][0] / args.temp
+        cont=jnp.asarray([np.concatenate([inp,np.asarray(current_symbols)])], dtype=np.int32)
+        print(cont)
+        #next_token=next(sampler)
+        output = model(cont)[:, -1, :][0] / args.temp
         filtered_logits=sample(output, top_k=4, top_p=0.9, repeat_filter=0.2, current_symbols=current_symbols)
         probabilities = softmax(filtered_logits)
         next_token = np.argmax(np.random.multinomial(1,probabilities, size=1)[0])
-        print(current_symbols)
         current_symbols.append(int(next_token))
+        print(sp.decode(current_symbols))
         p.append(time.time()-t1)
     e=time.time()
-    print(sp.decode(current_symbols[1:]))
-    print(current_symbols[1:])
+    print(sp.decode(current_symbols))
+    print(current_symbols)
     print(f"Took {e-s} seconds {p}, avg: {sum(p)//len(p)}")
