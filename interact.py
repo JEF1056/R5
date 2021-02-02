@@ -20,7 +20,7 @@ trax.fastmath.set_backend(args.backend)
 gin.parse_config_file(os.path.join(args.dir, "config.gin"))
 
 print("~~Loading Model~~")
-model = trax.models.Reformer2()
+model = trax.models.ReformerLM()
 model.init_from_file(os.path.join(args.dir, "model.pkl.gz"),  weights_only=True)
 model_init=model.state
 
