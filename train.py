@@ -102,7 +102,7 @@ if args.tpu_address != None:
         model_tf.set_optimizer(tf.keras.optimizers.Adam(args.lr, beta_1=0.9, beta_2=0.999, epsilon=1e-8))
         model_tf.create_checkpoint_manager(os.path.join(args.dir,"models","r5"), max_to_keep=5, load_model=False)
         
-        print(f"~~Begin Training for {args.epochs} epochs, {len(enumerate(train))} steps per epoch~~")
+        print(f"~~Begin Training for {args.epochs} epochs, {args.num_batches} steps per epoch~~")
         for e in range(1,args.epochs+1):
             for (step, (inputs, targets)) in enumerate(train):
                 step = (e) * (step+1)
