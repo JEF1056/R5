@@ -53,8 +53,8 @@ sp = spm.SentencePieceProcessor(model_file=f"{os.path.join(args.dir,'bpe')}.mode
 
 while True:
     inp=input("> ")
-    inp=np.asarray(sp.encode(inp)+[1], dtype=np.int32)[0]
-    print(sp.decode(inp.toarray()))
+    inp=np.asarray(sp.encode(inp)+[1], dtype=np.int32)
+    print(sp.decode(inp.tolist()))
     print(inp)
     model.state=model_init
     current_symbols=[]
