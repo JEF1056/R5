@@ -64,7 +64,7 @@ while True:
     while len(current_symbols) < 30 and 2 not in current_symbols:
         print("started")
         t1=time.time()
-        cont=jnp.array([current_symbols+inp], dtype=np.int32)
+        cont=jnp.asarray([current_symbols+inp], dtype=np.int32)
         print(cont)
         #next_token=next(sampler)
         output = model(cont)[:, -1, :][0] / args.temp
