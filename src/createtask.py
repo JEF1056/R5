@@ -24,12 +24,11 @@ def stream(num_devices, split, debug=False):
                     mask.append(np.asarray(np.pad(np.ones(len(tar)+1), (len(inp)+1, max_len-len(combined))), dtype=np.int32))
             if debug:
                 print(f"{len(inputs[0])}\n{len(mask[0])}")
-                print(f"{inputs[0].tolist()}\n{mask[0].tolist()}")
+                print(f"{inputs[0]}\n{mask[0]}")
                 print()
-                print(sp.decode(inputs[0].tolist()))
+                print(sp.decode(inputs[0].tolist())[:50])
                 overlay=[int(v) for i, v in enumerate(inputs[0]) if mask[0][i] == 1]
                 print(f"Overlay: {overlay}\nDecoded: {sp.decode(overlay)}")
-                exit()
             inputs = np.stack(inputs)
             mask = np.stack(mask)
             yield inputs, inputs, mask
