@@ -21,6 +21,9 @@ parser.add_argument('-tpu', type=str, default=None,
                     help='TPU ip address')
 args = parser.parse_args()
 
+try: os.mkdir(args.dir)
+except FileExistsError: pass
+
 if args.tpu != None:
     print("~~Setting Up Devices~~")
     import jax
