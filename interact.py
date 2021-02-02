@@ -3,9 +3,9 @@ import trax
 import os
 import time
 import argparse
-#import numpy as np
+import numpy as np
 import sentencepiece as spm
-import jax.numpy as np
+import jax.numpy as jnp
 
 parser = argparse.ArgumentParser(description='Evaluate a model')
 parser.add_argument('-dir', type=str, default="train",
@@ -54,8 +54,8 @@ sp = spm.SentencePieceProcessor(model_file=f"{os.path.join(args.dir,'bpe')}.mode
 
 while True:
     inp=input("> ")
-    inp=np.asarray(sp.encode(inp)+[1], dtype=np.int32)
-    print(sp.decode(inp.tolist()))
+    inp=sp.encode(inp)+[1]
+    print(sp.decode(inp))
     print(inp)
     #model.state=model_init
     #sampler = trax.supervised.decoding.autoregressive_sample_stream(model, inputs=inp, batch_size=1, temperature=args.temp, accelerate=True)
@@ -64,7 +64,7 @@ while True:
     while len(current_symbols) < 30 and 2 not in current_symbols:
         print("started")
         t1=time.time()
-        cont=jnp.asarray([np.concatenate([inp,np.asarray(current_symbols)])], dtype=np.int32)
+        cont=jnp.array([current_symbols+inp], dtype=np.int32)
         print(cont)
         #next_token=next(sampler)
         output = model(cont)[:, -1, :][0] / args.temp
