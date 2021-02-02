@@ -15,7 +15,7 @@ parser.add_argument('-temp', type=float, default=1.0,
                     help='backend to use for evaluation')
 
 print("~~Parsing Arguments~~")
-
+args = parser.parse_args()
 trax.fastmath.set_backend(args.backend)
 gin.parse_config_file(os.path.join(args.dir, "config.gin"))
 
