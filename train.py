@@ -34,7 +34,7 @@ if args.tpu != None:
 gin.parse_config_file("config.gin")
 if not os.path.exists(f"{os.path.join(args.dir,'bpe')}.model"):
     import sentencepiece as spm
-    spm.SentencePieceTrainer.train(input=args.train, model_prefix=os.path.join(args.dir,'bpe'), train_extremely_large_corpus=True, input_sentence_size=100000, shuffle_input_sentence=True, vocab_size=args.vocab_size, model_type="bpe", character_coverage = 1, user_defined_symbols=['\\n', "\\b", "\\t","\\e"], bos_piece="\\t", eos_piece="\\e", bos_id=1,eos_id=2, pad_id=-1)
+    spm.SentencePieceTrainer.train(input=args.train, model_prefix=os.path.join(args.dir,'bpe'), train_extremely_large_corpus=True, input_sentence_size=100000, shuffle_input_sentence=True, vocab_size=args.vocab_size, model_type="bpe", character_coverage = 1, user_defined_symbols=['/n', "/b", "/t","/e"], bos_piece="/t", eos_piece="/e", bos_id=1,eos_id=2, pad_id=-1)
 
 with open("config.json", "w") as f:
     json.dump([{"train":args.train, "validation": args.val}, args.max_length, args.dir], f)
@@ -49,7 +49,7 @@ train_task = training.TrainTask(
     loss_layer=tl.WeightedCategoryCrossEntropy(),
     lr_schedule=trax.lr.multifactor(),
     optimizer=trax.optimizers.Adafactor(),
-    n_steps_per_checkpoint=500,
+    n_steps_per_checkpoint=1000,
 )
 
 # Evaluaton task.
