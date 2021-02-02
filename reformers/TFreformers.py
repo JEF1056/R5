@@ -141,7 +141,7 @@ class TFReformerLM(tf.keras.Model):
                 return cross_entropy
 
 
-            per_example_losses = mirrored_strategy.experimental_run_v2(
+            per_example_losses = mirrored_strategy.run(
                 step_fn, args=(inputs,targets,loss_object,loss_metric,True,))
 
             loss = mirrored_strategy.reduce(
@@ -168,7 +168,7 @@ class TFReformerLM(tf.keras.Model):
                 return cross_entropy
 
 
-            per_example_losses = mirrored_strategy.experimental_run_v2(
+            per_example_losses = mirrored_strategy.run(
                 step_fn, args=(inputs,targets,loss_object,loss_metric,True,))
 
             loss = mirrored_strategy.reduce(
