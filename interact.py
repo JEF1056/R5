@@ -1,3 +1,5 @@
+import gin
+import trax
 import os
 import time
 import argparse
@@ -8,22 +10,14 @@ parser = argparse.ArgumentParser(description='Evaluate a model')
 parser.add_argument('-dir', type=str, default="train",
                     help='location of the model weights, tokenizer, and logs')
 parser.add_argument('-backend', type=str, default="tensorflow-numpy",
-                    help='backend to use for evaluation', choices=["jax", "tensorflow-numpy","tensorflow"])
+                    help='backend to use for evaluation', choices=["jax", "tensorflow-numpy"])
 parser.add_argument('-temp', type=float, default=1.0,
                     help='backend to use for evaluation')
-parser.add_argument('-vocab', type=str, default="data/vocab.32768.subwords.txt",
-                    help='prefix for the tokenizer model')
 
 print("~~Parsing Arguments~~")
-args = parser.parse_args()
-if args.backend == "tensorflow":
-    import trax
-    import tensorflow as tf
-else:
-    import gin
-    import trax
-    trax.fastmath.set_backend(args.backend)
-    gin.parse_config_file(os.path.join(args.dir, "config.gin"))
+
+trax.fastmath.set_backend(args.backend)
+gin.parse_config_file(os.path.join(args.dir, "config.gin"))
 
 print("~~Loading Model~~")
 model = trax.models.Reformer2()
@@ -62,7 +56,7 @@ while True:
     inp=np.asarray(sp.encode(inp)+[1], dtype=np.int32)[0]
     print(sp.decode(inp.toarray()))
     print(inp)
-    if args.backend != "tensorflow": model.state=model_init
+    model.state=model_init
     current_symbols=[]
     s, p=time.time(),[]
     while len(current_symbols) < 30 and 1 not in current_symbols[1:]:
