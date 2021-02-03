@@ -99,6 +99,6 @@ if args.tpu_address != None:
         
         print(f"~~Begin Training for {args.epochs} epochs, {args.steps} steps per epoch~~")
         model_tf.compile(optimizer="Adam", loss="sparse_categorical_crossentropy", metrics=["accuracy"])
-        model_tf.fit(LM_train["inputs"],LM_train["targets"], batch_size=args.batch_size, epochs=args.epochs, validation_data=LM_val["inputs"],LM_val["targets"], steps_per_epoch=args.steps, shuffle=True, callbacks=[ckpt_cb,tb_cb])  
+        model_tf.fit(LM_train["inputs"],LM_train["targets"], batch_size=args.batch_size, epochs=args.epochs, validation_data=(LM_val["inputs"],LM_val["targets"]), steps_per_epoch=args.steps, shuffle=True, callbacks=[ckpt_cb,tb_cb])  
 else:
     assert args.tpu_address != None, "non-TPU training is currently not implemented :3"
