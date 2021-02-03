@@ -25,9 +25,9 @@ def stream(num_devices, split, debug=False):
             if debug:
                 print(f"{len(inputs[0])}\n{len(mask[0])}")
                 print(f"{inputs[0]}\n{mask[0]}")
-                print()
-                print(sp.decode(inputs[0].tolist())[:50])
-                overlay=[int(v) for i, v in enumerate(inputs[0]) if mask[0][i] == 1]
+                ovloc=sorted(np.where(inputs[0]==1)))
+                print(sp.decode(inputs[0].tolist()[ovloc[0]-100:ovloc[0]+10]))
+                overlay=[int(inputs[0][i]) for i in ovloc]
                 print(f"Overlay: {overlay}\nDecoded: {sp.decode(overlay)}")
             inputs = np.stack(inputs)
             mask = np.stack(mask)
