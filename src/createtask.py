@@ -14,7 +14,7 @@ sp = spm.SentencePieceProcessor(model_file=f"{os.path.join(out_dir,'bpe')}.model
 def preprocess(ds):
     def to_inputs_and_targets(ex):
         """Map {"question": ..., "answer": ...}->{"inputs": ..., "targets": ...}."""
-        print(ex["question"])
+        print(ex["question"].numpy())
         inp, tar= sp.encode(ex["question"]), sp.encode(ex["answer"])
         if len(inp)+len(tar)+2 > max_len: inp=inp[max_len-len(inp)-len(tar)-2:]
         combined=inp+[1]+tar+[2]
