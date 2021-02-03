@@ -11,14 +11,14 @@ sp = spm.SentencePieceProcessor(model_file=f"{os.path.join(out_dir,'bpe')}.model
 
 def stream(num_devices, split, debug=False):
     with io.open(nq_tsv_path[split], mode="r", encoding="utf-8") as f:
-        print("~~Fetting offsets~~")
+        print("~~Getting offsets~~")
         line_offset, offset,line = [],0,None
         while line != "":
             line=f.readline()
             line_offset.append(offset)
             offset += len(line)
         f.seek(0)
-        np.shuffle(line_offset)
+        np.random.shuffle(line_offset)
         
         print(f"~~Initialized {split} stream~~")
         curr_index=0
@@ -28,7 +28,7 @@ def stream(num_devices, split, debug=False):
                 f.seek(line_offset[curr_index])
                 d=f.readline()
                 curr_index+=1
-                if curr_index >= len(line_offset)-1:  np.shuffle(line_offset)
+                if curr_index >= len(line_offset)-1:  np.random.shuffle(line_offset)
                 inp, tar= d.split("\t")
                 inp, tar= sp.encode(inp), sp.encode(tar)
                 if len(inp) < max_len or len(tar) < max_len:
