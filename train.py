@@ -68,8 +68,10 @@ if args.tpu_address != None:
     with strategy.scope():
         #define data and model
         print("~~Setting up model~~")
-        train=strategy.experimental_distribute_dataset(nq_dataset_fn("train"))
-        val=strategy.experimental_distribute_dataset(nq_dataset_fn("validation"))
+        train=nq_dataset_fn("train")
+        val=nq_dataset_fn("validation")
+        #train=strategy.experimental_distribute_dataset(train)
+        #val=strategy.experimental_distribute_dataset(val)
         LM_train = tfds.as_numpy(train) 
         LM_val = tfds.as_numpy(val)
         model_tf = TFReformerLM(
