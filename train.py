@@ -44,7 +44,7 @@ if not os.path.exists(f"{os.path.join(args.dir,'data-rf', 'bpe')}.model"):
 
 print("~~Parsing arguments~~")
 with open("config.json", "w") as f:
-    json.dump([{"train":os.path.join(args.dir,"data-rf", args.train), "validation": os.path.join(args.dir,"data-rf", args.val)}, args.max_len, os.path.join(args.dir,"models", "r5")],f)
+    json.dump([{"train":os.path.join(args.dir,"data-rf", args.train), "validation": os.path.join(args.dir,"data-rf", args.val)}, args.max_len, "./"],f)
 from src.createtask import nq_dataset_fn
 if args.tpu_address != None: args.tpu_address = f"grpc://{args.tpu_address}:8470"
 
