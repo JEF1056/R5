@@ -1,7 +1,6 @@
 import os
 import json
 import functools
-import numpy as np
 import tensorflow as tf
 import sentencepiece as spm
 import tensorflow_datasets as tfds
@@ -12,11 +11,11 @@ sp = spm.SentencePieceProcessor(model_file=f"{os.path.join(out_dir,'bpe')}.model
     
 def preprocess(ds):
     def to_inputs_and_targets(ex):
-        inp, tar= sp.encode(str(ex["question"])), sp.encode(str(ex["answer"]))
-        if len(inp) < max_len or len(tar) < max_len:
-            combined=inp+[1]+tar+[2]
-            inp=np.asarray(np.pad(combined, (0, max_len-len(combined))), dtype=np.int32)
-        return inp
+        """Map {"question": ..., "answer": ...}->{"inputs": ..., "targets": ...}."""
+        return {
+            "inputs": sp.encode(str(ex["question"])),
+            "targets": sp.encode(str(ex["answer"]))
+        }
     return ds.map(to_inputs_and_targets, num_parallel_calls=tf.data.experimental.AUTOTUNE)
 
 def nq_dataset_fn(split, shuffle_files=False):
