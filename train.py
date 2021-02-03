@@ -88,7 +88,6 @@ if args.tpu_address != None:
                 bucket_size = 64,     # average size of qk per bucket, 64 was recommended in paper
                 n_hashes = 4,         # 4 is permissible per author, 8 is the best but slower
                 ff_chunks = 8,      # number of chunks for feedforward layer, make higher if there are memory issues
-                weight_tie = True,   # tie parameters of each layer for no memory per additional depth
                 attn_chunks = 8,        # process lsh attention in chunks, only way for memory to fit when scaling to 16k tokens
                 use_full_attn = False   # use full self attention, for comparison
             )
