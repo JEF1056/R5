@@ -43,7 +43,7 @@ with open("config.json", "w") as f:
     json.dump([{"train":args.train, "validation": args.val}, args.max_length, args.dir], f)
 from src.createtask import stream
 test=next(stream(trax.fastmath.device_count(), "train", debug=True))[0]
-print("(device count, tokens per device) = ", test.shape)
+print(f"(device count, tokens per device) = {test.shape}\n")
 del test
 
 # Training task.
