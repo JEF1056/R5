@@ -41,14 +41,16 @@ if not os.path.exists(f"{os.path.join(args.dir,'bpe')}.model"):
 
 with open("config.json", "w") as f:
     json.dump([{"train":args.train, "validation": args.val}, args.max_length, args.dir], f)
-from src.createtask import stream
+from src.createtask import nq_dataset_fn, preprocess
 test=next(stream(trax.fastmath.device_count(), "train", debug=True))[0]
 print("(device count, tokens per device) = ", test.shape)
 del test
 
+train_ds, eval_ds=trax.data.tf_inputs.data_streams("nq_dataset_fn", data_dir=None, preprocess_fn=preprocess, shuffle_buffer_size=1024)
+
 # Training task.
 train_task = training.TrainTask(
-    labeled_data=stream(trax.fastmath.device_count(), "train"),
+    labeled_data=train_ds,
     loss_layer=tl.WeightedCategoryCrossEntropy(),
     lr_schedule=trax.lr.multifactor(),
     optimizer=trax.optimizers.Adam(),
@@ -57,7 +59,7 @@ train_task = training.TrainTask(
 
 # Evaluaton task.
 eval_task = training.EvalTask(
-    labeled_data=stream(trax.fastmath.device_count(), "validation"),
+    labeled_data=eval_ds,
     metrics=[tl.WeightedCategoryCrossEntropy(), tl.WeightedCategoryAccuracy()],
     n_eval_batches=40  # For less variance in eval numbers.
 )
