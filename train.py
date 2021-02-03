@@ -95,8 +95,7 @@ if args.tpu_address != None:
                 use_full_attn = False   # use full self attention, for comparison
             )
 
-        #loss_object = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True, reduction='none', name='loss')
-        loss_object = tf.keras.losses.SparseCategoricalCrossentropy
+        loss_object = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True, reduction='none', name='loss')
         accuracy_object = tf.keras.metrics.SparseCategoricalAccuracy(name='accuracy')
         train_loss = tf.keras.metrics.Mean(name='train_loss')
         
