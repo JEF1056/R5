@@ -49,7 +49,7 @@ if args.tpu_address != None: args.tpu_address = f"grpc://{args.tpu_address}:8470
 print("~~Setting up devices~~")
 if args.tpu_address != None:
     tpu = tf.distribute.cluster_resolver.TPUClusterResolver(tpu=args.tpu_address)
-    tf.config.experimental_run_functions_eagerly(False)
+    tf.enable_eager_execution()
     tf.config.experimental_connect_to_cluster(tpu)
     tf.tpu.experimental.initialize_tpu_system(tpu)
     strategy=tf.distribute.TPUStrategy(tpu_cluster_resolver=tpu)
