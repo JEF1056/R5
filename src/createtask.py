@@ -18,7 +18,7 @@ def preprocess(ds):
             #combined=inp+[1]+tar+[2]
             inp=np.pad(inp, (0, max_len-len(inp)))
             tar=np.pad(tar, (0, max_len-len(tar)))
-        return {"inputs":tf.convert_to_tensor(inp,dtype=np.uint8), "targets": tf.convert_to_tensor(inp,dtype=np.uint8)}
+        return (tf.convert_to_tensor(inp,dtype=np.uint8), tf.convert_to_tensor(inp,dtype=np.uint8))
     return ds.map(to_inputs_and_targets, num_parallel_calls=tf.data.experimental.AUTOTUNE)
 
 def nq_dataset_fn(split, shuffle_files=False):
