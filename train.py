@@ -13,7 +13,7 @@ parser.add_argument('-val', type=str, default="data/context-val.txt",
                     help='location of validation text')
 parser.add_argument('-train', type=str, default="data/context-train.txt",
                     help='location of train text')
-parser.add_argument('-max_length', type=int, default=4096,
+parser.add_argument('-max_length', type=int, default=2048,
                     help='maximum length for the model (ensure it matches gin)')
 parser.add_argument('-vocab_size', type=int, default=32768,
                     help='vocab size for the model (ensure it matches gin)')
@@ -41,14 +41,14 @@ if not os.path.exists(f"{os.path.join(args.dir,'bpe')}.model"):
 
 with open("config.json", "w") as f:
     json.dump([{"train":args.train, "validation": args.val}, args.max_length, args.dir], f)
-from src.createtask import nq_dataset_fn
-
-train_ds=trax.data.tf_inputs.no_preprocess(nq_dataset_fn("train").shuffle(buffer_size=1024), training=True)
-eval_ds=trax.data.tf_inputs.no_preprocess(nq_dataset_fn("validation").shuffle(buffer_size=1024), training=False)
+from src.createtask import stream
+test=next(stream(trax.fastmath.device_count(), "train", debug=True))[0]
+print("(device count, tokens per device) = ", test.shape)
+del test
 
 # Training task.
 train_task = training.TrainTask(
-    labeled_data=train_ds,
+    labeled_data=stream(trax.fastmath.device_count(), "train"),
     loss_layer=tl.WeightedCategoryCrossEntropy(),
     lr_schedule=trax.lr.multifactor(),
     optimizer=trax.optimizers.Adam(),
@@ -57,7 +57,7 @@ train_task = training.TrainTask(
 
 # Evaluaton task.
 eval_task = training.EvalTask(
-    labeled_data=eval_ds,
+    labeled_data=stream(trax.fastmath.device_count(), "validation"),
     metrics=[tl.WeightedCategoryCrossEntropy(), tl.WeightedCategoryAccuracy()],
     n_eval_batches=40  # For less variance in eval numbers.
 )
