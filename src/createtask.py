@@ -3,10 +3,19 @@ import os
 import json
 import numpy as np
 import sentencepiece as spm
+from random import randrange
 
 with open("config.json", "r") as f:
     nq_tsv_path, max_len, out_dir=json.load(f)
-sp = spm.SentencePieceProcessor(model_file=f"{os.path.join(out_dir,'bpe')}.model")
+sp = spm.SentencePieceProcessor(model_file=f"{os.path.join(out_dir,'bpe')}.model") 
+
+def get_random_line(afile, default=None):
+    """Return a random line from the file (or default)."""
+    line = default
+    for i, aline in enumerate(afile, start=1):
+        if randrange(i) == 0:  # random int [0..i)
+            line = aline
+    return line
 
 def stream(num_devices, split, debug=False):
     with io.open(nq_tsv_path[split], mode="r", encoding="utf-8") as f:
@@ -14,8 +23,8 @@ def stream(num_devices, split, debug=False):
         while True:
             inputs, mask=[],[]
             while len(inputs) < num_devices:
-                d=f.readline()
-                if d == "": f.seek(0); d=f.readline()
+                d=get_random_line(f)
+                if d == "": d=get_random_line(f)
                 inp, tar= d.split("\t")
                 inp, tar= sp.encode(inp), sp.encode(tar)
                 if len(inp) < max_len or len(tar) < max_len:
