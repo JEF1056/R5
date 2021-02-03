@@ -36,9 +36,9 @@ def nq_dataset_fn(split, shuffle_files=False):
     return ds
 
 print("A few raw validation examples...")
-for ex in tfds.as_numpy(nq_dataset_fn("validation").take(5)):
-    print(f"{len(ex[0])}\n{len(ex[2])}")
+for ex in tfds.as_numpy(preprocess(nq_dataset_fn("validation")).take(5)):
     print(ex)
+    print(f"{len(ex[0])}\n{len(ex[2])}")
     ovloc=sorted(np.where(ex[2][0]==1))
     print(ovloc)
     st=ovloc[0][0]-10 if ovloc[0][0]-10 <=0 else 0
