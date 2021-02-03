@@ -7,7 +7,7 @@ import logging as py_logging
 import src.helpers as helpers
 import tensorflow_datasets as tfds
 from contextlib import contextmanager
-from reformers.TFreformers import TFReformer, TFLSHAttention
+from reformers.TFreformers import TFReformerLM, TFLSHAttention
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 parser = argparse.ArgumentParser(description='Train R5')
@@ -74,7 +74,7 @@ if args.tpu_address != None:
         #val=strategy.experimental_distribute_dataset(val)
         #LM_train = tfds.as_numpy(train) 
         #LM_val = tfds.as_numpy(val)
-        model_tf = TFReformer(
+        model_tf = TFReformerLM(
                 num_tokens= args.vocab_size,
                 emb = 512,
                 depth = 6,   # batch 4 full attention 8 이면 안돌아감 
