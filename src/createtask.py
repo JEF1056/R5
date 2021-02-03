@@ -24,7 +24,7 @@ def stream(num_devices, split, debug=False):
             inputs, mask=[],[]
             while len(inputs) < num_devices:
                 d=get_random_line(f)
-                if d == "": d=get_random_line(f)
+                if d == "" or d == None: d=get_random_line(f)
                 inp, tar= d.split("\t")
                 inp, tar= sp.encode(inp), sp.encode(tar)
                 if len(inp) < max_len or len(tar) < max_len:
