@@ -93,8 +93,8 @@ if args.tpu_address != None:
                 use_full_attn = False   # use full self attention, for comparison
             )
         
-        print(f"~~Begin Training for {args.epochs} epochs~~")
+        print(f"~~Begin Training for {args.epochs} epochs, {args.steps} steps per epoch~~")
         model_tf.compile(optimizer="Adam", loss="sparse_categorical_crossentropy", metrics=["accuracy"])
-        model_tf.fit(train, batch_size=args.batch_size, epochs=args.epochs, validation_data=val)  
+        model_tf.fit(train, batch_size=args.batch_size, epochs=args.epochs, validation_data=val, steps_per_epoch=args.steps)  
 else:
     assert args.tpu_address != None, "non-TPU training is currently not implemented :3"
