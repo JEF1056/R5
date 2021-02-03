@@ -2,7 +2,7 @@ import os
 import json
 import warnings
 import argparse
-import tensorflow.compat.v1 as tf
+import tensorflow as tf
 import logging as py_logging
 import src.helpers as helpers
 from contextlib import contextmanager
@@ -49,12 +49,12 @@ if args.tpu_address != None: args.tpu_address = f"grpc://{args.tpu_address}:8470
 print("~~Setting up devices~~")
 if args.tpu_address != None:
     tpu = tf.distribute.cluster_resolver.TPUClusterResolver(tpu=args.tpu_address)
-    tf.enable_eager_execution()
+    tf.config.experimental_run_functions_eagerly(False)
     tf.config.experimental_connect_to_cluster(tpu)
     tf.tpu.experimental.initialize_tpu_system(tpu)
-    print("All devices: ", tf.config.list_logical_devices('TPU'))
-    tf.disable_v2_behavior()
     strategy=tf.distribute.TPUStrategy(tpu_cluster_resolver=tpu)
+    print("All devices: ", tf.config.list_logical_devices('TPU'))
+    #tf.disable_v2_behavior()
     
 tf.get_logger().propagate = False
 py_logging.root.setLevel('INFO')
