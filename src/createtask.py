@@ -1,6 +1,7 @@
 import os
 import json
 import functools
+import numpy as np
 import sentencepiece as spm
 import tensorflow.compat.v1 as tf
 import tensorflow_datasets as tfds
