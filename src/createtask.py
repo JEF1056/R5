@@ -13,8 +13,8 @@ def preprocess(ds):
     def to_inputs_and_targets(ex):
         """Map {"question": ..., "answer": ...}->{"inputs": ..., "targets": ...}."""
         return {
-            "inputs": sp.encode(ex["question"]),
-            "targets": sp.encode(ex["answer"])
+            "inputs": sp.encode(str(ex["question"])),
+            "targets": sp.encode(str(ex["answer"]))
         }
     return ds.map(to_inputs_and_targets, num_parallel_calls=tf.data.experimental.AUTOTUNE)
 
