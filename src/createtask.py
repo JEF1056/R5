@@ -17,9 +17,9 @@ def preprocess(ds):
         inp, tar= sp.encode(str(ex["question"])), sp.encode(str(ex["answer"]))
         if len(inp)+len(tar)+2 > max_len: inp=inp[max_len-len(inp)-len(tar)-2:]
         combined=inp+[1]+tar+[2]
-        inp=np.asarray(np.pad(combined, (0, max_len-len(combined))), dtype=np.int32)
+        input=np.asarray(np.pad(combined, (0, max_len-len(combined))), dtype=np.int32)
         mask=np.asarray(np.pad(np.ones(len(tar)+1), (len(inp)+1, max_len-len(combined))), dtype=np.int32)
-        return inp,inp,mask
+        return input,input,mask
     return ds.map(to_inputs_and_targets, num_parallel_calls=tf.data.experimental.AUTOTUNE)
 
 def nq_dataset_fn(split, shuffle_files=False):
