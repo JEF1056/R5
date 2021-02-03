@@ -15,9 +15,10 @@ def preprocess(ds):
         """Map {"question": ..., "answer": ...}->{"inputs": ..., "targets": ...}."""
         inp, tar= sp.encode(str(ex["question"])), sp.encode(str(ex["answer"]))
         if len(inp) < max_len or len(tar) < max_len:
-            combined=inp+[1]+tar+[2]
-            inp=np.pad(combined, (0, max_len-len(combined)))
-        return tf.convert_to_tensor(inp,dtype=np.uint8)
+            #combined=inp+[1]+tar+[2]
+            inp=np.pad(inp, (0, max_len-len(inp)))
+            tar=np.pad(tar, (0, max_len-len(tar)))
+        return {"inputs":tf.convert_to_tensor(inp,dtype=np.uint8), "targets": tf.convert_to_tensor(inp,dtype=np.uint8)}
     return ds.map(to_inputs_and_targets, num_parallel_calls=tf.data.experimental.AUTOTUNE)
 
 def nq_dataset_fn(split, shuffle_files=False):

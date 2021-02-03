@@ -70,6 +70,8 @@ if args.tpu_address != None:
         print("~~Setting up model~~")
         train=nq_dataset_fn("train")
         val=nq_dataset_fn("validation")
+        train=list(train.as_numpy_iterator())
+        val=list(val.as_numpy_iterator())
         #train=strategy.experimental_distribute_dataset(train)
         #val=strategy.experimental_distribute_dataset(val)
         #LM_train = tfds.as_numpy(train) 
@@ -101,6 +103,6 @@ if args.tpu_address != None:
         
         print(f"~~Begin Training for {args.epochs} epochs, {args.steps} steps per epoch~~")
         model_tf.compile(optimizer="Adam", loss="sparse_categorical_crossentropy", metrics=["accuracy"])
-        model_tf.fit(train, batch_size=args.batch_size, epochs=args.epochs, validation_data=val, steps_per_epoch=args.steps, shuffle=True, callbacks=[ckpt_cb,tb_cb])  
+        model_tf.fit(train["input"],train["target"], batch_size=args.batch_size, epochs=args.epochs, validation_data=(val["input"],val["target"]), steps_per_epoch=args.steps, shuffle=True, callbacks=[ckpt_cb,tb_cb])  
 else:
     assert args.tpu_address != None, "non-TPU training is currently not implemented :3"
