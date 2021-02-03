@@ -38,10 +38,6 @@ parser.add_argument("-eval", type=helpers.str2bool, nargs='?', const=True, defau
                     help="eval model after training")
 args = parser.parse_args()
 
-if not os.path.exists(f"{os.path.join(args.dir,'data-rf', 'bpe')}.model"):
-    import sentencepiece as spm
-    spm.SentencePieceTrainer.train(input=args.train, model_prefix=os.path.join(args.dir,"data-rf", "bpe"), train_extremely_large_corpus=True, input_sentence_size=100000, shuffle_input_sentence=True, vocab_size=args.vocab_size, model_type="bpe", character_coverage = 1, user_defined_symbols=['/n', "/b", "/t","/e"], bos_piece="/t", eos_piece="/e", bos_id=1,eos_id=2, pad_id=-1)
-
 print("~~Parsing arguments~~")
 with open("config.json", "w") as f:
     json.dump([{"train":os.path.join(args.dir,"data-rf", args.train), "validation": os.path.join(args.dir,"data-rf", args.val)}, args.max_len, "./"],f)
