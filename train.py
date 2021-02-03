@@ -42,10 +42,11 @@ if not os.path.exists(f"{os.path.join(args.dir,'bpe')}.model"):
 with open("config.json", "w") as f:
     json.dump([{"train":args.train, "validation": args.val}, args.max_length, args.dir], f)
 from src.createtask import stream
+teststream=stream(trax.fastmath.device_count(), "train", debug=True)
 for _ in range(5):
-    test=next(stream(trax.fastmath.device_count(), "train", debug=True))[0]
+    test=next(teststream)[0]
     print(f"(device count, tokens per device) = {test.shape}\n")
-del test
+del teststream, test
 
 # Training task.
 train_task = training.TrainTask(
