@@ -19,11 +19,7 @@ def preprocess(ds):
         combined=inp+[1]+tar+[2]
         input=np.asarray(np.pad(combined, (0, max_len-len(combined))), dtype=np.int32)
         mask=np.asarray(np.pad(np.ones(len(tar)+1), (len(inp)+1, max_len-len(combined))), dtype=np.int32)
-        return {
-            "input":input,
-            "target":input,
-            "mask":mask
-        }
+        return input,input,mask
     return ds.map(to_inputs_and_targets, num_parallel_calls=tf.data.experimental.AUTOTUNE)
 
 def nq_dataset_fn(split, shuffle_files=False):
@@ -40,7 +36,7 @@ def nq_dataset_fn(split, shuffle_files=False):
     return preprocess(ds)
 
 print("A few raw validation examples...")
-for ex in tfds.as_numpy(preprocess(nq_dataset_fn("validation")).take(5)):
+for ex in tfds.as_numpy(nq_dataset_fn("validation").take(5)):
     print(ex)
     print(f"{len(ex[0])}\n{len(ex[2])}")
     ovloc=sorted(np.where(ex[2]==1))
