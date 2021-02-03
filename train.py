@@ -70,8 +70,8 @@ if args.tpu_address != None:
         print("~~Setting up model~~")
         train=nq_dataset_fn("train")
         val=nq_dataset_fn("validation")
-        train=strategy.experimental_distribute_dataset(train)
-        val=strategy.experimental_distribute_dataset(val)
+        #train=strategy.experimental_distribute_dataset(train)
+        #val=strategy.experimental_distribute_dataset(val)
         #LM_train = tfds.as_numpy(train) 
         #LM_val = tfds.as_numpy(val)
         model_tf = TFReformerLM(
