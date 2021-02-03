@@ -33,7 +33,7 @@ def nq_dataset_fn(split, shuffle_files=False):
     functools.partial(tf.io.decode_csv, record_defaults=["", ""],
                       field_delim="\t", use_quote_delim=False),
     num_parallel_calls=tf.data.experimental.AUTOTUNE)
-    ds = ds.map(lambda *ex: dict(zip(["question", "answer"], ex)))
+    ds = ds.map(lambda *ex: dict(zip(["question", "answer"], tf.py_function(ex) )))
     return preprocess(ds)
 
 print("A few raw validation examples...")
