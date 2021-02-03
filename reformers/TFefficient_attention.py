@@ -22,7 +22,8 @@
 
 import tensorflow as tf
 from tensorflow.keras.layers import Dropout, Dense
-from .TFutils import sort_key_val, batched_index_select, make_unit_length, process_inputs_chunk,get_padding
+from .TFutils import sort_key_val, batched_index_select, make_unit_length, chunked_sum, process_inputs_chunk
+
 class TFLSHAttention(tf.keras.Model):
     def __init__( self,
                   dropout = 0.,
@@ -40,7 +41,7 @@ class TFLSHAttention(tf.keras.Model):
 
         self.dropout = Dropout(dropout)
         self.dropout_for_hash = Dropout(dropout)
-        
+
         assert rehash_each_round or allow_duplicate_attention, (
             'The setting {allow_duplicate_attention=False, rehash_each_round=False}'
             ' is not implemented.')
@@ -62,76 +63,79 @@ class TFLSHAttention(tf.keras.Model):
         # We sample a different random rotation for each round of hashing to
         # decrease the probability of hash misses.
         assert n_buckets % 2 == 0
-        
-        rot_size = n_buckets #rotation몇번할꺼냐 
+
+        rot_size = n_buckets
 
         rotations_shape = (
-            batch_size , #head마다 batch개 필요할때 
+            batch_size if self._random_rotations_per_head else 1,
             vecs.shape[-1],
-            self.n_hashes ,
+            self.n_hashes if self._rehash_each_round else 1,
             rot_size // 2)
-        #rotations_shape[0] == 1 일때 해당차원 batch size로 뿔린다
-        random_rotations = tf.random.normal(rotations_shape)
 
-        dropped_vecs = self.dropout_for_hash(vecs) #그냥 drop out
-        rotated_vecs = tf.einsum('btf,bfhi->bthi', dropped_vecs, random_rotations)
-        rotated_vecs = tf.transpose(rotated_vecs,perm=[0, 2, 1, 3])
-        rotated_vecs = tf.concat([rotated_vecs, -rotated_vecs], axis=-1)
+        random_rotations = tf.broadcast_to(tf.random.normal(rotations_shape), (batch_size, vecs.shape[-1], self.n_hashes if self._rehash_each_round else 1, rot_size // 2))
 
-        buckets = tf.math.argmax(rotated_vecs, axis=-1) #여기서 buckets는 bucket number 들의 matrix라는 뜻 
-        # buckets is now (batch, self.n_hashes, seqlen). Next we add offsets so that
-        # bucket numbers from different hashing rounds don't overlap.
-        offsets = tf.range(self.n_hashes) #[0..self.n_hashes-1]
-        offsets = tf.reshape(offsets * n_buckets, (1, -1, 1))#[0..n_buckets*(self.n_hashes-1)]    argmax값들이 다른 Hash round와 중복하지 않기위해 값을 곱하였다.  ex) [0,n_buckets,2*n_buckets,..]
-        
-        offsets = tf.cast(offsets, tf.int64)
-        buckets = tf.reshape(buckets + offsets, (batch_size, -1,)) # batch size 남기고 collapse
+        dropped_vecs = self.dropout_for_hash(vecs)
+        rotated_vecs = tf.einsum('btf,bfhi->bhti', dropped_vecs, random_rotations)
 
-        return buckets#(batch, self.seqlen*n_hashes)
+        if self._rehash_each_round:
+            rotated_vecs = tf.concat([rotated_vecs, -rotated_vecs], axis=-1)
+            buckets = tf.math.argmax(rotated_vecs, axis=-1)
+            # buckets is now (self.n_hashes, seqlen). Next we add offsets so that
+            # bucket numbers from different hashing rounds don't overlap.
+            offsets = tf.range(self.n_hashes)
+            offsets = tf.reshape(offsets * n_buckets, (1, -1, 1))
+            offsets = tf.cast(offsets, tf.int64)
+            buckets = tf.reshape(buckets + offsets, (batch_size, -1,))
+        else:
+            rotated_vecs = tf.concat([rotated_vecs, -rotated_vecs], axis=-1)
+            # In this configuration, we map each item to the top self.n_hashes buckets
+            rotated_vecs = tf.squeeze(rotated_vecs, axis=0)
+            bucket_range = tf.range(rotated_vecs.shape[-1])
+            bucket_range = tf.reshape(bucket_range, (1, -1))
+            bucket_range = tf.broadcast_to(bucket_range, rotated_vecs.shape)
+
+            _, buckets = sort_key_val(rotated_vecs, bucket_range, axis=-1)
+            buckets = buckets[:, -self.n_hashes:]
+
+            h, *_ = buckets.shape 
+            buckets = tf.reshape(buckets.permute((*_, h)), (-1,))
+
+        return buckets
 
     def call(self, qk, v):
-        
         batch_size, seqlen, _ = qk.shape
         device = qk.device
 
-        n_buckets = seqlen // self.bucket_size #몇개의 bucket으로 나눌것인가 
+        n_buckets = seqlen // self.bucket_size
         n_bins = n_buckets
 
         buckets = self.hash_vectors(n_buckets, qk)
-
-
         # We use the same vector as both a query and a key.
-        assert int(buckets.shape[1]) == seqlen * self.n_hashes 
+        assert int(buckets.shape[1]) == self.n_hashes * seqlen
 
-        ticker = tf.expand_dims(tf.range(seqlen * self.n_hashes ), axis=0)
-        buckets_and_t = seqlen * buckets + tf.cast((ticker % seqlen), tf.int64)#to sort q by bucket number and by seq length
-        #tf.print(buckets_and_t)
-        
+        ticker = tf.expand_dims(tf.range(self.n_hashes * seqlen), axis=0)
+        buckets_and_t = seqlen * buckets + tf.cast((ticker % seqlen), tf.int64)
         buckets_and_t = tf.stop_gradient(buckets_and_t)
 
         # Hash-based sort ("s" at the start of variable names means "sorted")
-        sbuckets_and_t, sticker = sort_key_val(buckets_and_t, ticker, axis=-1)
-        #tf.print(sbuckets_and_t)
-        _, undo_sort = sort_key_val(sticker, ticker, axis=-1)
+        sbuckets_and_t, sticker = sort_key_val(buckets_and_t, ticker, dim=-1)
+        _, undo_sort = sort_key_val(sticker, ticker, dim=-1)
         del ticker
 
         sbuckets_and_t = tf.stop_gradient(sbuckets_and_t)
         sticker = tf.stop_gradient(sticker)
         undo_sort = tf.stop_gradient(undo_sort)
 
-        st = (sticker % seqlen) #index참조하기위해 다시 원상복구  seqlen * buckets 부분 필요없어짐 
-
-        #chunk 안에emb값이 바슷한것끼리 묶임 , n_hash는 분리됨아직 
-        sqk = batched_index_select(qk, st) #batch, seqlen*n_hashes,emb_dim 
-        
+        st = (sticker % seqlen)
+        sqk = batched_index_select(qk, st)
         sv = batched_index_select(v, st)
 
         # Split off a "bin" axis so that attention only occurs within chunks.
-        bq_t = bkv_t = tf.reshape(st, (batch_size, self.n_hashes * n_bins, -1))#batch, n_bins*n_hashes,bucket_size
-        bqk = tf.reshape(sqk, (batch_size, self.n_hashes * n_bins, -1, sqk.shape[-1]))#batch, n_bins*n_hashes,bucket_size,emb_dim
+        bq_t = bkv_t = tf.reshape(st, (batch_size, self.n_hashes * n_bins, -1))
+        bqk = tf.reshape(sqk, (batch_size, self.n_hashes * n_bins, -1, sqk.shape[-1]))
         bv = tf.reshape(sv, (batch_size, self.n_hashes * n_bins, -1, sv.shape[-1]))
-        bq_buckets = bkv_buckets = tf.reshape(sbuckets_and_t // seqlen, (batch_size, self.n_hashes * n_bins, -1))#batch, n_bins*n_hashes, bucket size #n_hashs offset 한건 살아있음 
-        
+        bq_buckets = bkv_buckets = tf.reshape(sbuckets_and_t // seqlen, (batch_size, self.n_hashes * n_bins, -1))
+
         # Hashing operates on unit-length vectors. Unnormalized query vectors are
         # fine because they effectively provide a learnable temperature for the
         # attention softmax, but normalizing keys is needed so that similarity for
@@ -145,93 +149,103 @@ class TFLSHAttention(tf.keras.Model):
         def look_one_back(x):
             x_extra = tf.concat([x[:, -1:, ...], x[:, :-1, ...]], axis=1)
             return tf.concat([x, x_extra], axis=2)
-   
-        bk = look_one_back(bk)#batch, n_bins*n_hashes, chunk(2*bucket_size), emb_dim
-      
+
+        bk = look_one_back(bk)
         bv = look_one_back(bv)
         bkv_t = look_one_back(bkv_t)
         bkv_buckets = look_one_back(bkv_buckets)
 
         # Dot-product attention.
-        dots = tf.einsum('bhie,bhje->bhij', bq, bk) * (bq.shape[-1] ** -0.5)#batch, n_bins*n_hashes,bucket_size,2*bucket_size # only bucket_sizex2*bucket_size!!!
-        #print(dots.shape)
-        #assume the dataset has no padded and packed fully the entire seq_len 
+        dots = tf.einsum('bhie,bhje->bhij', bq, bk) * (bq.shape[-1] ** -0.5)
 
         # Causal masking
-        #tf.print("asfd"*100)
-        #tf.print(self.causal)
         if self.causal:
-   
-            mask = bq_t[:, :, :, None] < bkv_t[:, :, None, :] #index 관한 마스크 >t 인것들 마스킹 
-            #tf.print(mask)
-            dots = tf.math.multiply(dots, (1-tf.cast(mask, tf.float32))) + (tf.cast(mask, tf.float32)) * (-5e4 )
+            mask = bq_t[:, :, :, None] < bkv_t[:, :, None, :] 
+            dots = tf.math.multiply(dots, tf.cast(mask, tf.float32)) + (1-tf.cast(mask, tf.float32)) * float('-inf')
             del mask
-    
+
         # Mask out attention to self except when no other targets are available.
-        self_mask = bq_t[:, :, :, None] == bkv_t[:, :, None, :] # 자기자신인것 index마스킹 
-        #tf.print(self_mask)
-        dots = tf.math.multiply(dots, (1-tf.cast(self_mask, tf.float32))) + (tf.cast(self_mask, tf.float32)) * (-5e4 )
+        self_mask = bq_t[:, :, :, None] == bkv_t[:, :, None, :]
+        dots = tf.math.multiply(dots, tf.cast(self_mask, tf.float32)) + (1-tf.cast(self_mask, tf.float32)) * (- 1e5)
         del self_mask
+
         # Mask out attention to other hash buckets.
-
         if not self._attend_across_buckets:
-            #tf.print("###"*100)
-            bucket_mask = bq_buckets[:, :, :, None] != bkv_buckets[:, :, None, :] #내용중 자기 랑 다른 Hash인것들 2*chunk size 단위로 마스킹 
-            #tf.print(bucket_mask)
-          
-            dots = tf.math.multiply(dots, (1-tf.cast(bucket_mask, tf.float32))) + (tf.cast(bucket_mask, tf.float32)) * (-5e4 )
-            
-            #tf.print(dots)
-            #tf.print(bucket_mask)
-        dots_logsumexp = tf.math.reduce_logsumexp(dots, axis=-1, keepdims=True) #2*bucket_size 에 대한 partition function 
+            bucket_mask = bq_buckets[:, :, :, None] != bkv_buckets[:, :, None, :]
+            dots = tf.math.multiply(dots, tf.cast(bucket_mask, tf.float32)) + (1-tf.cast(bucket_mask, tf.float32)) * float('-inf')
+            del bucket_mask
 
-        dots = tf.exp(dots - dots_logsumexp)#softmax 
+        # Don't double-count query-key pairs across multiple rounds of hashing.
+        # There are two possible strategies here. (1) The default is to count how
+        # many times a query-key pair is repeated, and to lower its log-prob
+        # correspondingly at each repetition. (2) When hard_k is set, the code
+        # instead masks all but the first occurence of each query-key pair.
+        if not self._allow_duplicate_attention:
+            locs1 = undo_sort // bq_t.shape[-1]
+            locs2 = (locs1 + 1) % (self.n_hashes * n_bins)
+            if not self._attend_across_buckets:
+                locs1 = buckets * (self.n_hashes * n_bins) + locs1
+                locs2 = buckets * (self.n_hashes * n_bins) + locs2
+            locs = tf.transpose(
+                tf.concat([
+                    tf.reshape(locs1, (batch_size, self.n_hashes, seqlen)),
+                    tf.reshape(locs2, (batch_size, self.n_hashes, seqlen)),
+                ], 1),
+            perm=[0, 2, 1]) 
+
+            slocs = batched_index_select(locs, st)
+            b_locs = tf.reshape(slocs, (batch_size, self.n_hashes * n_bins, -1, 2 * self.n_hashes))
+
+            b_locs1 = b_locs[:, :, :, None, :self.n_hashes]
+
+            bq_locs = b_locs1.expand(b_locs.shape[:3] + (2, self.n_hashes))
+            bq_locs = tf.reshape(bq_locs, b_locs.shape)
+            bkv_locs = look_one_back(b_locs)
+
+            dup_counts = (bq_locs[:, :, :, None, :] == bkv_locs[:, :, None, :, :])
+            # for memory considerations, chunk summation of last dimension for counting duplicates
+            dup_counts = chunked_sum(dup_counts, chunks=(self.n_hashes * batch_size))
+            dup_counts = tf.stop_gradient(dup_counts)
+            assert dup_counts.shape == dots.shape
+            dots = dots - tf.log(dup_counts + 1e-9)
+            del dup_counts
+
+        # Softmax.
+        dots_logsumexp = tf.math.reduce_logsumexp(dots, axis=-1, keepdims=True)
+        dots = tf.exp(dots - dots_logsumexp)
         dots = self.dropout(dots)
 
-        bo = tf.einsum('buij,buje->buie', dots, bv)#batch, n_bins*n_hashes, bucket_size, emb_size
-        so = tf.reshape(bo, (batch_size, -1, bo.shape[-1]))#batch, seq_len * n_hashes, emb_size
-        
-        slogits = tf.reshape(dots_logsumexp, (batch_size, -1,)) #batch, seq_len * n_hashes
-        #tf.print("="*100)
-        #tf.print(slogits)
+        bo = tf.einsum('buij,buje->buie', dots, bv)
+        so = tf.reshape(bo, (batch_size, -1, bo.shape[-1]))
+        slogits = tf.reshape(dots_logsumexp, (batch_size, -1,))
+
         class UnsortLogits(tf.keras.layers.Layer):
             def __init__(self):
                 super(UnsortLogits, self).__init__()
             
             def call(self, so, slogits):
-                #so, slogits = tf.stop_gradient(so), tf.stop_gradient(slogits)
-
+                so, slogits = tf.stop_gradient(so), tf.stop_gradient(slogits)
                 o = batched_index_select(so, undo_sort)
-                _, logits = sort_key_val(sticker, slogits, axis=-1)
+                _, logits = sort_key_val(sticker, slogits, dim=-1)
                 return o, logits
 
             
         unsortlogits = UnsortLogits()
-        o, logits = unsortlogits(so, slogits) ##batch, seq_len * n_hashes 에서 마지막 차원 의 logit
-
+        o, logits = unsortlogits(so, slogits)
 
         if self.n_hashes == 1:
             out = o
-        else:#collapse hashes
+        else:
             o = tf.reshape(o, (batch_size, self.n_hashes, seqlen, o.shape[-1]))
-
             logits = tf.reshape(logits, (batch_size, self.n_hashes, seqlen, 1))
-            logits=tf.cast(logits, tf.float32)
-
-
-            logits_logsumexp =  tf.math.reduce_logsumexp(logits, axis=1, keepdims=True)#(batch_size, 1, seqlen, 1)
-
-
-            probs = tf.exp(logits - logits_logsumexp)# softmax to do weight sum on n_hashes dim ###(batch_size, self.n_hashes, seqlen, 1)
-
+            probs = tf.exp(logits - tf.math.reduce_logsumexp(logits, axis=1, keepdims=True))
             out = tf.reduce_sum(o * probs, axis=1)
- 
-        
+
         assert out.shape == v.shape
         return out, buckets
 
 class TFLSHSelfAttention(tf.keras.Model):
-    def __init__(self, emb, heads = 8, bucket_size = 64, n_hashes = 8, causal = False, attn_chunks = None, random_rotations_per_head = False, attend_across_buckets = False, allow_duplicate_attention = True, **kwargs):
+    def __init__(self, emb, heads = 8, bucket_size = 64, n_hashes = 8, causal = False, attn_chunks = None, random_rotations_per_head = False, attend_across_buckets = True, allow_duplicate_attention = True, **kwargs):
         super(TFLSHSelfAttention, self).__init__()
         assert emb % heads == 0, 'dimensions must be divisible by number of heads'
 
@@ -248,7 +262,6 @@ class TFLSHSelfAttention(tf.keras.Model):
 
     def call(self, inputs):
         b, t, e, h = *inputs.shape, self.heads
-
         assert t % self.bucket_size == 0, f'Sequence length needs to be divisible by target bucket size - {self.bucket_size}'
 
         qk = self.toqk(inputs)
@@ -258,11 +271,11 @@ class TFLSHSelfAttention(tf.keras.Model):
             return tf.reshape(tf.transpose(tf.reshape(v, (b, t, h, -1)), perm=[0, 2, 1, 3]), (b * h, t, -1)) 
 
         def split_heads(v):
-            return tf.transpose(tf.reshape(v, (b, h, t, -1)), perm=[0, 2, 1, 3])
+            return tf.transpose(tf.reshape(v, (b, t, h, -1)), perm=[0, 2, 1, 3])
 
         qk = merge_heads(qk)
         v = merge_heads(v)
-        
+
         outputs = process_inputs_chunk(self.lsh_attn, qk, v, chunks=self.attn_chunks)
         attn_out = tf.concat([output for (output, _) in outputs], axis=0)
 

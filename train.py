@@ -18,7 +18,7 @@ parser.add_argument('-val', type=str, default="context-val.txt",
                     help='val file')
 parser.add_argument('-tpu_address', type=str, default=None,
                     help='TPU ip address')
-parser.add_argument('-epochs', type=int, default=100000,
+parser.add_argument('-epochs', type=int, default=20,
                     help='# of epochs')
 parser.add_argument('-validate_every', type=int, default=500,
                     help='# of epochs')
@@ -30,9 +30,7 @@ parser.add_argument('-vocab_size', type=int, default=32768,
                     help='vocab size')
 parser.add_argument('-steps', type=int, default=50000,
                     help='umber of steps to finetune')
-parser.add_argument('-batch_size', type=int, default=4,
-                    help='batch size')
-parser.add_argument('-num_batches', type=int, default=100000,
+parser.add_argument('-batch_size', type=int, default=16,
                     help='batch size')
 parser.add_argument('-eval_steps', type=int, default=30,
                     help='number of samples to feed eval')
@@ -94,49 +92,9 @@ if args.tpu_address != None:
                 attn_chunks = 8,        # process lsh attention in chunks, only way for memory to fit when scaling to 16k tokens
                 use_full_attn = False   # use full self attention, for comparison
             )
-
-        loss_object = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True, reduction='none', name='loss')
-        accuracy_object = tf.keras.metrics.SparseCategoricalAccuracy(name='accuracy')
-        train_loss = tf.keras.metrics.Mean(name='train_loss')
-        
-        model_tf.set_optimizer(tf.keras.optimizers.Adam(args.lr, beta_1=0.9, beta_2=0.999, epsilon=1e-8))
-        model_tf.create_checkpoint_manager(os.path.join(args.dir,"models","r5"), max_to_keep=5, load_model=True)
         
         print(f"~~Begin Training for {args.epochs} epochs, {args.num_batches} steps per epoch~~")
-        for e in range(1,args.epochs+1):
-            for (step, (inputs, targets)) in enumerate(train):
-                step = (e) * (step+1)
-                loss = model_tf.train_step(inputs,targets,loss_object,train_loss,strategy,distributed=True)
-                tf.print(step,loss)
-                    
-                if step % 1000 == 0:
-                    ckpt_save_path = model_tf.ckpt_manager.save()
-                    print('Saving checkpoint for step {} at {}'.format(step, ckpt_save_path))
-
-                    if step % args.validate_every == 0:
-                        total_eval_loss=0
-                        for (eval_step, (inputs_val, targets_val)) in enumerate(val):
-                            if eval_step==args.eval_steps: break
-                            eval_loss = model_tf.eval_step(inputs_val,targets_val,loss_object,train_loss,strategy,distributed=True)
-                            total_eval_loss+=eval_loss
-                        print("eval loss",total_eval_loss/float(eval_step+1))
-
-                    """
-                    if step % GENERATE_EVERY == 0:
-                        print("generate")
-                        asdf = sampler_dataset_val[0][:-1]
-                        print(asdf)
-                        generated_seq = sg.sample_sequence(asdf,
-                                                        predict_len=30,
-                                                        temperature=1.0,
-                                                        top_k=8,
-                                                        top_p=0.9,
-                                                        nucleus_sampling=True)
-
-                        print("Generated seq by model:- " + generated_seq) 
-                    """    
-
-                if step>args.num_batches:
-                    break        
+        model_tf.compile(optimizer="Adam", loss="sparse_categorical_crossentropy", metrics=["accuracy"], shuffle=True)
+        model_tf.fit(train, batch_size=args.batch_size, epochs=args.epochs, validation_data=val)  
 else:
     assert args.tpu_address != None, "non-TPU training is currently not implemented :3"
