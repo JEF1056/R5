@@ -54,7 +54,7 @@ if args.tpu_address != None:
     tf.tpu.experimental.initialize_tpu_system(tpu)
     strategy=tf.distribute.TPUStrategy(tpu_cluster_resolver=tpu)
     print("All devices: ", tf.config.list_logical_devices('TPU'))
-    #tf.disable_v2_behavior()
+    tf.disable_v2_behavior()
     
 tf.get_logger().propagate = False
 py_logging.root.setLevel('INFO')
