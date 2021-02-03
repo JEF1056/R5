@@ -63,20 +63,12 @@ def tf_verbosity_level(level):
     yield
     tf.logging.set_verbosity(og_level)
 
-print("~~Loading data~~")
-train=nq_dataset_fn("train")
-train=train.batch(args.batch_size)
-train=train.prefetch(10)
-val=nq_dataset_fn("validation")
-val=val.batch(args.batch_size)
-val=val.prefetch(10)
-
 if args.tpu_address != None:
     with strategy.scope():
         #define data and model
         print("~~Setting up model~~")
-        train=strategy.experimental_distribute_dataset(train)
-        val=strategy.experimental_distribute_dataset(val)
+        train=strategy.experimental_distribute_dataset(nq_dataset_fn("train"))
+        val=strategy.experimental_distribute_dataset(nq_dataset_fn("validation"))
         model_tf = TFReformerLM(
                 num_tokens= args.vocab_size,
                 emb = 512,

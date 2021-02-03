@@ -2,8 +2,8 @@ import os
 import json
 import functools
 import numpy as np
-import sentencepiece as spm
 import tensorflow as tf
+import sentencepiece as spm
 import tensorflow_datasets as tfds
 
 with open("config.json", "r") as f:
@@ -16,7 +16,7 @@ def preprocess(ds):
         if len(inp) < max_len or len(tar) < max_len:
             combined=inp+[1]+tar+[2]
             inp=np.asarray(np.pad(combined, (0, max_len-len(combined))), dtype=np.int32)
-        return tf.convert_to_tensor(inp)
+        return inp
     return ds.map(to_inputs_and_targets, num_parallel_calls=tf.data.experimental.AUTOTUNE)
 
 def nq_dataset_fn(split, shuffle_files=False):
