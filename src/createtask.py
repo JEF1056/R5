@@ -12,7 +12,7 @@ sp = spm.SentencePieceProcessor(model_file=f"{os.path.join(out_dir,'bpe')}.model
 def preprocess(ds):
     def to_inputs_and_targets(ex):
         """Map {"question": ..., "answer": ...}->{"inputs": ..., "targets": ...}."""
-        return [sp.encode(str(ex["question"])),"targets": sp.encode(str(ex["answer"]))
+        return [sp.encode(str(ex["question"])),sp.encode(str(ex["answer"]))]
     return ds.map(to_inputs_and_targets, num_parallel_calls=tf.data.experimental.AUTOTUNE)
 
 def nq_dataset_fn(split, shuffle_files=False):
