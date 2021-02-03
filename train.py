@@ -93,7 +93,7 @@ if args.tpu_address != None:
                 use_full_attn = False   # use full self attention, for comparison
             )
         
-        print(f"~~Begin Training for {args.epochs} epochs, {args.num_batches} steps per epoch~~")
+        print(f"~~Begin Training for {args.epochs} epochs~~")
         model_tf.compile(optimizer="Adam", loss="sparse_categorical_crossentropy", metrics=["accuracy"], shuffle=True)
         model_tf.fit(train, batch_size=args.batch_size, epochs=args.epochs, validation_data=val)  
 else:
