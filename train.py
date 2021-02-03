@@ -51,7 +51,7 @@ train_task = training.TrainTask(
     labeled_data=stream(trax.fastmath.device_count(), "train"),
     loss_layer=tl.WeightedCategoryCrossEntropy(),
     lr_schedule=trax.lr.multifactor(),
-    optimizer=trax.optimizers.Adafactor(),
+    optimizer=trax.optimizers.Adam(),
     n_steps_per_checkpoint=1000,
 )
 

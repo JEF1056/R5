@@ -19,32 +19,29 @@ attn_type = [
   ]
 share_qk = False  # LSH attention ignores this flag and always shares q & k
 vocab_size = 32768
-attn_kv = 64
+attn_kv = 128
 dropout = 0.2
 n_tokens = 2048
 
 # Parameters for multifactor:
 # ==============================================================================
-multifactor.constant = 0.0003
-multifactor.warmup_steps = 10000
+multifactor.constant = 0.0442
+multifactor.warmup_steps = 2000
 multifactor.factors = 'constant * linear_warmup * rsqrt_decay'
 
-# Parameters for Adafactor:
+# Parameters for Adam:
 # ==============================================================================
-Adafactor.beta1 = 0.0
-Adafactor.clipping_threshold = 1.0
-Adafactor.decay_rate = 0
-Adafactor.epsilon1 = 1e-30
-Adafactor.epsilon2 = 0.001
-Adafactor.factored = True
+Adam.weight_decay_rate=0.0
+Adam.b1 = 0.9
+Adam.b2 = 0.98
+Adam.eps = 1e-9
 
 # Parameters for SelfAttention:
 # ==============================================================================
 trax.layers.SelfAttention.attention_dropout = %dropout
+trax.layers.SelfAttention.n_chunks_after = 0    
 trax.layers.SelfAttention.chunk_len = 256
 trax.layers.SelfAttention.n_chunks_before = 1
-trax.layers.SelfAttention.n_parallel_heads = 1
-trax.layers.SelfAttention.n_heads = %n_heads
 
 # Parameters for LSHSelfAttention:
 # ==============================================================================
