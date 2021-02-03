@@ -41,6 +41,8 @@ for ex in tfds.as_numpy(nq_dataset_fn("validation").take(5)):
     print(f"{len(ex[0])}\n{len(ex[2])}")
     ovloc=sorted(np.where(ex[2]==1))
     print(ovloc)
+    print(ovloc[0][0])
+    print(ex[0].tolist())
     st=ovloc[0][0]-10 if ovloc[0][0]-10 <=0 else 0
     print(sp.decode(ex[0].tolist()[st:ovloc[0][0]+10]))
     overlay = [int(ex[0][i]) for i in ovloc[0]]
