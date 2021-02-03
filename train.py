@@ -20,7 +20,7 @@ parser.add_argument('-tpu_address', type=str, default=None,
                     help='TPU ip address')
 parser.add_argument('-epochs', type=int, default=20,
                     help='# of epochs')
-parser.add_argument('-validate_every', type=int, default=500,
+parser.add_argument('-checkpoint', type=int, default=2500,
                     help='# of epochs')
 parser.add_argument('-max_len', type=int, default=2048,
                     help='max length for input/output sequences')
@@ -40,9 +40,13 @@ args = parser.parse_args()
 
 print("~~Parsing arguments~~")
 with open("config.json", "w") as f:
-    json.dump({"train":os.path.join(args.dir,"data", args.train), "validation": os.path.join(args.dir,"data", args.val)},f)
+    json.dump([{"train":os.path.join(args.dir,"data", args.train), "validation": os.path.join(args.dir,"data", args.val)}, args.max_len, os.path.join(args.dir,"models", "r5")],f)
 from src.createtask import nq_dataset_fn
 if args.tpu_address != None: args.tpu_address = f"grpc://{args.tpu_address}:8470"
+
+if not os.path.exists(f"{os.path.join(args.dir,'bpe')}.model"):
+    import sentencepiece as spm
+    spm.SentencePieceTrainer.train(input=args.train, model_prefix=os.path.join(args.dir,'bpe'), train_extremely_large_corpus=True, input_sentence_size=100000, shuffle_input_sentence=True, vocab_size=args.vocab_size, model_type="bpe", character_coverage = 1, user_defined_symbols=['/n', "/b", "/t","/e"], bos_piece="/t", eos_piece="/e", bos_id=1,eos_id=2, pad_id=-1)
 
 print("~~Setting up devices~~")
 if args.tpu_address != None:
@@ -93,8 +97,18 @@ if args.tpu_address != None:
                 use_full_attn = False   # use full self attention, for comparison
             )
         
+        ckpt_cb = tf.keras.callbacks.ModelCheckpoint(
+            filepath=os.path.join(args.dir,"models", "r5"),
+            monitor="val_loss",
+            mode="auto",
+            save_freq=args.checkpoint
+        )
+        tb_cb = tf.keras.callbacks.TensorBoard(
+            log_dir=os.path.join(args.dir,"models", "r5", "logs"), histogram_freq=0, update_freq=args.checkpoint//4
+        )
+        
         print(f"~~Begin Training for {args.epochs} epochs, {args.steps} steps per epoch~~")
         model_tf.compile(optimizer="Adam", loss="sparse_categorical_crossentropy", metrics=["accuracy"])
-        model_tf.fit(train, batch_size=args.batch_size, epochs=args.epochs, validation_data=val, steps_per_epoch=args.steps)  
+        model_tf.fit(train, batch_size=args.batch_size, epochs=args.epochs, validation_data=val, steps_per_epoch=args.steps, shuffle=True, callbacks=[ckpt_cb,tb_cb])  
 else:
     assert args.tpu_address != None, "non-TPU training is currently not implemented :3"

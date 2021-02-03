@@ -1,24 +1,19 @@
 import json
 import functools
+import sentencepiece as spm
 import tensorflow.compat.v1 as tf
 import tensorflow_datasets as tfds
 
 with open("config.json", "r") as f:
-    nq_tsv_path=json.load(f)
+    nq_tsv_path, max_len, out_dir=json.load(f)
+sp = spm.SentencePieceProcessor(model_file=f"{os.path.join(out_dir,'bpe')}.model")
     
 def preprocess(ds):
-    def normalize_text(text):
-        #print(f"trying {text}")
-        #text=tf.strings.unicode_encode(text, "UTF-8")
-        return text
-
     def to_inputs_and_targets(ex):
         """Map {"question": ..., "answer": ...}->{"inputs": ..., "targets": ...}."""
         return {
-            "inputs":
-                tf.strings.join(
-                    ["Input: ", normalize_text(ex["question"])]),
-            "targets": normalize_text(ex["answer"])
+            "inputs": sp.encode(ex["question"]),
+            "targets": sp.encode(ex["answer"])
         }
     return ds.map(to_inputs_and_targets, num_parallel_calls=tf.data.experimental.AUTOTUNE)
 
