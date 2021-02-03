@@ -128,13 +128,13 @@ class TFReformerLM(tf.keras.Model):
     @tf.function
     def train_step(self,inputs,targets,loss_object,loss_metric,mirrored_strategy=None, training=True,distributed = False ):
         if distributed :
-            def step_fn(inputs,targets,loss_object,loss_metric,training=True):
+            def step_fn(inputs,targets,training=True):
                 loss, grads_all, vars_all, cross_entropy = self.backward_grads_and_vars(inputs,targets,loss_object,training=training)
                 self.optimizer.apply_gradients(zip(grads_all, vars_all))
                 loss_metric(loss)   
                 return cross_entropy
 
-            per_example_losses = mirrored_strategy.run(step_fn, args=(inputs,targets,loss_object,loss_metric,True,))
+            per_example_losses = mirrored_strategy.run(step_fn, args=(inputs,targets,True,))
             loss = mirrored_strategy.reduce(tf.distribute.ReduceOp.MEAN, per_example_losses, axis=0) 
         else:             
             loss, grads_all, vars_all, _ = self.backward_grads_and_vars(inputs,targets,loss_object,training=training)
