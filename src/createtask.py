@@ -3,32 +3,19 @@ import os
 import json
 import numpy as np
 import sentencepiece as spm
-from random import randrange
 
 with open("config.json", "r") as f:
     nq_tsv_path, max_len, out_dir=json.load(f)
-sp = spm.SentencePieceProcessor(model_file=f"{os.path.join(out_dir,'bpe')}.model") 
+sp = spm.SentencePieceProcessor(model_file=f"{os.path.join(out_dir,'bpe')}.model")
 
 def stream(num_devices, split, debug=False):
     with io.open(nq_tsv_path[split], mode="r", encoding="utf-8") as f:
-        print("~~Getting offsets~~")
-        line_offset, offset,line = [],0,None
-        while line != "":
-            line=f.readline()
-            line_offset.append(offset)
-            offset += len(line)
-        f.seek(0)
-        np.random.shuffle(line_offset)
-        
         print(f"~~Initialized {split} stream~~")
-        curr_index=0
         while True:
             inputs, mask=[],[]
             while len(inputs) < num_devices:
-                f.seek(line_offset[curr_index])
                 d=f.readline()
-                curr_index+=1
-                if curr_index >= len(line_offset)-1:  np.random.shuffle(line_offset)
+                if d == "": f.seek(0); d=f.readline()
                 inp, tar= d.split("\t")
                 inp, tar= sp.encode(inp), sp.encode(tar)
                 if len(inp) < max_len or len(tar) < max_len:
