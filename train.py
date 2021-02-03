@@ -43,7 +43,7 @@ with open("config.json", "w") as f:
     json.dump([{"train":args.train, "validation": args.val}, args.max_length, args.dir], f)
 from src.createtask import nq_dataset_fn, preprocess
 
-train_ds, eval_ds=trax.data.tf_inputs.data_streams("nq_dataset_fn", data_dir=None, preprocess_fn=preprocess, shuffle_buffer_size=1024)
+train_ds, eval_ds=trax.data.tf_inputs.data_streams(nq_dataset_fn, data_dir=None, preprocess_fn=preprocess, shuffle_buffer_size=1024)
 
 # Training task.
 train_task = training.TrainTask(
