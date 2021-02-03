@@ -127,7 +127,7 @@ class TFReformerLM(tf.keras.Model):
         return logits
 
 
- 
+    @tf.function
     def train_step(self,inputs,targets,loss_object,loss_metric,mirrored_strategy=None, training=True,distributed = False ):
         if distributed :
 
