@@ -3,7 +3,7 @@ import os
 import json
 import functools
 import numpy as np
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
 import sentencepiece as spm
 import tensorflow_datasets as tfds
 
@@ -14,7 +14,7 @@ sp = spm.SentencePieceProcessor(model_file=f"{os.path.join(out_dir,'bpe')}.model
 def preprocess(ds):
     def to_inputs_and_targets(ex):
         """Map {"question": ..., "answer": ...}->{"inputs": ..., "targets": ...}."""
-        inp, tar= sp.encode(ex["question"].numpy()), sp.encode(ex["answer"].numpy())
+        inp, tar= sp.encode(str(ex["question"])), sp.encode(str(ex["answer"]))
         if len(inp)+len(tar)+2 > max_len: inp=inp[max_len-len(inp)-len(tar)-2:]
         combined=inp+[1]+tar+[2]
         input=np.asarray(np.pad(combined, (0, max_len-len(combined))), dtype=np.int32)
