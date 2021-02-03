@@ -37,7 +37,6 @@ def nq_dataset_fn(split, shuffle_files=False):
 
 print("A few raw validation examples...")
 for ex in tfds.as_numpy(nq_dataset_fn("validation").take(5)):
-    ex[0],ex[1],ex[2]=ex[0].numpy(),ex[1].numpy(),ex[2].numpy()
     print(ex)
     print(f"{len(ex[0])}\n{len(ex[2])}")
     ovloc=sorted(np.where(ex[2].tolist()==1))
