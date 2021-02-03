@@ -32,7 +32,7 @@ def nq_dataset_fn(split, shuffle_files=False):
                       field_delim="\t", use_quote_delim=False),
     num_parallel_calls=tf.data.experimental.AUTOTUNE)
     ds = ds.map(lambda *ex: dict(zip(["question", "answer"], ex)))
-    return ds
+    return preprocess(ds)
 
 print("A few raw validation examples...")
 for ex in tfds.as_numpy(nq_dataset_fn("validation").take(5)):
