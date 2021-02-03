@@ -7,7 +7,7 @@ import logging as py_logging
 import src.helpers as helpers
 import tensorflow_datasets as tfds
 from contextlib import contextmanager
-from reformers.TFreformers import TFReformerLM, TFLSHAttention
+from reformers.TFreformers import TFReformer, TFLSHAttention
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 parser = argparse.ArgumentParser(description='Train R5')
