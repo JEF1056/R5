@@ -103,12 +103,12 @@ class TFReformerLM(tf.keras.Model):
                 print('Latest checkpoint restored...............')
             else:
                 print("Initializing model from scratch..........")
+                
     def load_model(self, filepath):
         ckpt = tf.train.Checkpoint(model=self)
         ckpt_manager = tf.train.CheckpointManager(ckpt, filepath)
         ckpt.restore(ckpt_manager.latest_checkpoint)
         print("Model Restored..........................")
-
 
     def before_reformer(self, inputs):
         inputs = self.token_emb(inputs)+ self.pos_emb(tf.range(inputs.shape[1]))
@@ -119,13 +119,11 @@ class TFReformerLM(tf.keras.Model):
         logits = self.to_logits(reformer_outputs)
         return logits
 
-
     def call(self, inputs,training=True):
         embedded_inputs = self.before_reformer(inputs)
         reformer_output = self.reformer(embedded_inputs,training=training)
         logits = self.after_reformer(reformer_output)
         return logits
-
 
     @tf.function
     def train_step(self,inputs,targets,loss_object,loss_metric,mirrored_strategy=None, training=True,distributed = False ):

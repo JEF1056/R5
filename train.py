@@ -95,12 +95,13 @@ if args.tpu_address != None:
                 use_full_attn = False   # use full self attention, for comparison
             )
 
-        loss_object = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True, reduction='none', name='loss')
+        #loss_object = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True, reduction='none', name='loss')
+        loss_object = tf.keras.losses.SparseCategoricalCrossentropy
         accuracy_object = tf.keras.metrics.SparseCategoricalAccuracy(name='accuracy')
         train_loss = tf.keras.metrics.Mean(name='train_loss')
         
         model_tf.set_optimizer(tf.keras.optimizers.Adam(args.lr, beta_1=0.9, beta_2=0.999, epsilon=1e-8))
-        model_tf.create_checkpoint_manager(os.path.join(args.dir,"models","r5"), max_to_keep=5, load_model=False)
+        model_tf.create_checkpoint_manager(os.path.join(args.dir,"models","r5"), max_to_keep=5, load_model=True)
         
         print(f"~~Begin Training for {args.epochs} epochs, {args.num_batches} steps per epoch~~")
         for e in range(1,args.epochs+1):
