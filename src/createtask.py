@@ -24,10 +24,10 @@ def stream(num_devices, split, debug=False):
                     mask.append(np.asarray(np.pad(np.ones(len(tar)+1), (len(inp)+1, max_len-len(combined))), dtype=np.int32))
             if debug:
                 print(f"{len(inputs[0])}\n{len(mask[0])}")
-                print(f"{inputs[0]}\n{mask[0]}")
+                print(f"{inputs[0]}\n{mask[0]}\n")
                 ovloc=sorted(np.where(mask[0]==1))
-                print(ovloc)
-                print(sp.decode(inputs[0].tolist()[ovloc[0][0]-10:ovloc[0][0]+10]))
+                st=ovloc[0][0]-10 if ovloc[0][0]-10 >= 0 else 0
+                print(sp.decode(inputs[0].tolist()[st:ovloc[0][0]+10]))
                 overlay = [int(inputs[0][i]) for i in ovloc[0]]
                 print(f"Overlay: {overlay}\nDecoded: {sp.decode(overlay)}")
             inputs = np.stack(inputs)
