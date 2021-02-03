@@ -1,7 +1,0 @@
-trax==1.3.7
-gin
-jax
-jaxlib
-sentencepiece
-tqdm
-matplotlib

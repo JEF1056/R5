@@ -9,20 +9,18 @@ import trax.supervised.trainer_lib
 train.model = @trax.models.ReformerLM
 # Our model will have 6 layers, alternating between the LSH attention proposed
 # in the Reformer paper and local attention within a certain context window.
-n_layers = 6
+n_layers = 8
 n_heads = 8
 attn_type = [
   @trax.layers.SelfAttention,
-  @LSHSelfAttention,  
   @trax.layers.SelfAttention,
   @LSHSelfAttention,
   @trax.layers.SelfAttention,
-  @LSHSelfAttention,
   ]
 share_qk = False  # LSH attention ignores this flag and always shares q & k
 vocab_size = 32768
 attn_kv = 64
-dropout = 0.1
+dropout = 0.2
 n_tokens = 2048
 
 # Parameters for multifactor:
@@ -40,27 +38,26 @@ Adafactor.epsilon1 = 1e-30
 Adafactor.epsilon2 = 0.001
 Adafactor.factored = True
 
-
 # Parameters for SelfAttention:
 # ==============================================================================
 trax.layers.SelfAttention.attention_dropout = %dropout
-trax.layers.SelfAttention.chunk_len = 64
+trax.layers.SelfAttention.chunk_len = 256
 trax.layers.SelfAttention.n_chunks_before = 1
-trax.layers.SelfAttention.n_parallel_heads = 4
+trax.layers.SelfAttention.n_parallel_heads = 1
 trax.layers.SelfAttention.n_heads = %n_heads
 
 # Parameters for LSHSelfAttention:
 # ==============================================================================
 LSHSelfAttention.attention_dropout = 0.0
-LSHSelfAttention.chunk_len = 64
-LSHSelfAttention.n_buckets = [256, 512]
+LSHSelfAttention.chunk_len = 256
+LSHSelfAttention.n_buckets = 512
 LSHSelfAttention.n_chunks_after = 0
 LSHSelfAttention.n_chunks_before = 1
 LSHSelfAttention.n_hashes = 2
 LSHSelfAttention.n_parallel_heads = 1
-LSHSelfAttention.predict_drop_len = 128
+LSHSelfAttention.predict_drop_len = 256
 LSHSelfAttention.predict_mem_len = 1024
-LSHSelfAttention.n_parallel_heads = 4
+LSHSelfAttention.n_parallel_heads = 1
 LSHSelfAttention.n_heads = %n_heads
 
 # Parameters for ReformerLM:
